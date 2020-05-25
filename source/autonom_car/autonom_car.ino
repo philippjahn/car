@@ -1,24 +1,18 @@
-// Erster Test Auto fahren zu lassen und Stopp basierend auf IR-Sensor
+// Erster Test Auto fahren zu lassen und Stopp basierend auf IR-Sensor + US-Sensor
 
 #include <avr/io.h>
 #include "autonom_car.h"
 #include "bit_macros.h"
 
-void init_US_sensor_timer1();
-void init_left_motor_pwm_timer0();
-void init_right_motor_pwm_timer2();
-void init_debug_led();
-void delay_timer1_us(uint16_t);
-void delay_timer1_ms(uint16_t);
-int input_capture_timer1();
-  
 int main()
 {
   int duration = 0, distance = 0;
   
-  init();               // required for delay, serial, ...
-  Serial.begin(9600);
-  Serial.println("Hardware Serial configured.");
+  //init();               // required for delay, serial, ...
+  //Serial.begin(9600);
+  init_UART();
+  //Serial.println("Hardware Serial configured.");
+  UART_send_string("Hardware Serial configured.\n");
 
   init_US_sensor_timer1();
 
@@ -27,13 +21,13 @@ int main()
 
   init_debug_led();
 
-  // Infrarotsensor einlesen
-  pinMode(IR_SENSOR_FRONT, INPUT_PULLUP);
+  init_IR_sensor();
 
   while (1)
   {
     // Motor emergency stopp if IR sensor shows obstacle
-    if (digitalRead(IR_SENSOR_FRONT) == 0)
+    //if (digitalRead(IR_SENSOR_FRONT) == 0)
+    if(GET_BIT(IR_SENSOR_FRONT_PIN,IR_SENSOR_FRONT_POS) == 0)
     {
       OCR0A = 0;
       OCR2A = 0;
@@ -67,12 +61,15 @@ int main()
     if (distance >= 200 || distance <= 0)
     {
       distance = 200;
-      Serial.println("Out of range");
+      //Serial.println("Out of range");
+      UART_send_string("Out of range\n");
     }
     else
     {
-      Serial.print(distance);
-      Serial.println(" cm");
+      //Serial.print(distance);
+      UART_send_integer(distance);
+      //Serial.println(" cm");
+      UART_send_string(" cm\n");
     }  
   
     // ------> WE ALSO WANT TO GET RID OF THIS ONE <------ Hausübung bis Montag -> Abgabe in Discord als Direktnachricht an mich (nicht im Textkanal!)
@@ -83,6 +80,9 @@ int main()
   return 0;
 }
 
+/*  \name init_US_sensor_timer1() -> initialize timer1 for ultra sonic (HC-SR04) sensor handling
+ *  
+ */
 void init_US_sensor_timer1()
 {
   //pinMode(US_SENSOR_TRIGGER, OUTPUT);
@@ -170,6 +170,15 @@ void init_debug_led()
   return;
 }
 
+void init_IR_sensor()
+{
+  //pinMode(IR_SENSOR_FRONT, INPUT_PULLUP);
+  CLEAR_BIT(IR_SENSOR_FRONT_DDR, IR_SENSOR_FRONT_POS);  // define as INPUT (not required)
+  SET_BIT(IR_SENSOR_FRONT_PORT, IR_SENSOR_FRONT_POS);   // activate internal pullup
+
+  return;
+}
+
 /*  \name delay_timer1_us(uint16_t microseconds) -> blocks the CPU for x microsecondes
  *  \param uint16_t microseconds -> microseconds is the number how long the CPU is delayed
  */
@@ -217,7 +226,8 @@ int input_capture_timer1()
   {
     if (bit_is_set(TIFR1,TOV1))             // break loop if we got a timeout
     {
-      Serial.println("TOV1 occured");
+      //Serial.println("TOV1 occured");
+      UART_send_string("TOV1 occured\n");
       break;
     }
   }
@@ -226,4 +236,50 @@ int input_capture_timer1()
   TCCR1B &= ~((1 << CS12) | (1 << CS10));   // stop timer
 
   return ICR1 * 64;                         // convert into us (0,0625us 1 Tick * 1024)*/
+}
+
+void init_UART(void)
+{
+  UBRR0H = (BAUDRATE >> 8);                  // set the high byte of the baudrate (shift right by 8 bits)
+  UBRR0L = BAUDRATE;                         // set the low byte of the baudrate
+  UCSR0B |= (1 << TXEN0) | (1 << RXEN0);     // enable receiver and transmitter
+  UCSR0C |= (1 << UCSZ00) | (1 << UCSZ01);   // 8 data bits, 1 stop bit, no parity bit!
+
+  return;
+}
+
+void UART_send_byte(const char data)
+{
+  while (!(UCSR0A & (1 << UDRE0)));          // wait till previous operation is finished
+  UDR0 = data;                               // write data into the register to start send procedure
+
+  return;
+}
+
+unsigned char UART_read_byte(void)
+{
+  while (!(UCSR0A & (1 << RXC0)));          // wait till data is received
+  return UDR0;                              // return data from register
+}
+
+void UART_send_string(const char *data)
+{
+  int i = 0;
+  while (data[i] != '\0')
+  {
+    UART_send_byte(data[i]);
+    i++;
+  }
+
+  return;
+}
+
+void UART_send_integer(int data)
+{
+  char buffer[20];
+
+  itoa(data, buffer, 10);     // convert integer into character array
+  UART_send_string(buffer);
+
+  return;
 }

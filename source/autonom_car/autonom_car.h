@@ -1,3 +1,9 @@
+// General definitions
+#define F_CPU                     16000000UL
+#define BAUD                      9600                      // define baud for serial communication
+#define BAUDRATE                  ((F_CPU)/(BAUD*16UL)-1)   // set baud rate values for UBRR
+
+// Pin definitions
 #define DEBUG_LED                 13
 #define DEBUG_LED_DDR             DDRB
 #define DEBUG_LED_PORT            PORTB
@@ -49,3 +55,16 @@
 #define MOTOR_SENSOR_LEFT_REAR   A2
 #define MOTOR_SENSOR_RIGHT_FRONT A3
 #define MOTOR_SENSOR_RIGHT_REAR  A4
+
+// Prototypen
+void init_US_sensor_timer1();
+void init_left_motor_pwm_timer0();
+void init_right_motor_pwm_timer2();
+void init_debug_led();
+void delay_timer1_us(uint16_t);
+void delay_timer1_ms(uint16_t);
+int input_capture_timer1();
+void UART_send_byte(const char);
+unsigned char UART_read_byte(void);
+void UART_send_string(const char *data);
+void UART_send_integer(int);
