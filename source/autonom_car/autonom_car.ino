@@ -8,10 +8,7 @@ int main()
 {
   int duration = 0, distance = 0;
   
-  //init();               // required for delay, serial, ...
-  //Serial.begin(9600);
   init_UART();
-  //Serial.println("Hardware Serial configured.");
   UART_send_string("Hardware Serial configured.\n");
 
   init_US_sensor_timer1();
@@ -26,13 +23,11 @@ int main()
   while (1)
   {
     // Motor emergency stopp if IR sensor shows obstacle
-    //if (digitalRead(IR_SENSOR_FRONT) == 0)
     if(GET_BIT(IR_SENSOR_FRONT_PIN,IR_SENSOR_FRONT_POS) == 0)
     {
       OCR0A = 0;
       OCR2A = 0;
       
-      //digitalWrite(DEBUG_LED, HIGH);
       SET_BIT(DEBUG_LED_PORT,DEBUG_LED_POS);
     }
     else
@@ -40,20 +35,13 @@ int main()
       OCR0A = 55 + distance;
       OCR2A = 55 + distance;
 
-      //digitalWrite(DEBUG_LED, LOW);
       CLEAR_BIT(DEBUG_LED_PORT,DEBUG_LED_POS);
     }
 
-    //digitalWrite(US_SENSOR_TRIGGER, HIGH);
     SET_BIT(US_SENSOR_TRIGGER_PORT,US_SENSOR_TRIGGER_POS);        // generate high impuls on trigger Pin of 10us according to datasheet
   
-    //delayMicroseconds(10);            // ------> WE WANT TO GET RID OF THIS FUNCTION <------
     delay_timer1_us(10);                // blocking for 0 - xxx µs
 
-    //digitalWrite(US_SENSOR_TRIGGER, LOW);
-    CLEAR_BIT(US_SENSOR_TRIGGER_PORT,US_SENSOR_TRIGGER_POS);
-    
-    //duration = pulseIn(echoPin, HIGH);  // read lenght of generated puls on echo Pin
     duration = input_capture_timer1();
     
     distance = duration/58;                 // convert durtion to centimeters (number taken from datasheet)
@@ -61,19 +49,14 @@ int main()
     if (distance >= 200 || distance <= 0)
     {
       distance = 200;
-      //Serial.println("Out of range");
       UART_send_string("Out of range\n");
     }
     else
     {
-      //Serial.print(distance);
       UART_send_integer(distance);
-      //Serial.println(" cm");
       UART_send_string(" cm\n");
     }  
   
-    // ------> WE ALSO WANT TO GET RID OF THIS ONE <------ Hausübung bis Montag -> Abgabe in Discord als Direktnachricht an mich (nicht im Textkanal!)
-    //delay(60);                                            // 60ms at least to work according to datasheet
     delay_timer1_ms(60);                // blocking for 0 - xxx ms    
   }
 
@@ -85,9 +68,7 @@ int main()
  */
 void init_US_sensor_timer1()
 {
-  //pinMode(US_SENSOR_TRIGGER, OUTPUT);
   SET_BIT(US_SENSOR_TRIGGER_DDR,US_SENSOR_TRIGGER_POS); // set trigger pin to output
-  //pinMode(US_SENSOR_ECHO, INPUT_PULLUP);
   CLEAR_BIT(US_SENSOR_ECHO_DDR,US_SENSOR_ECHO_POS);    // set echo pin to input
   SET_BIT(US_SENSOR_ECHO_PORT,US_SENSOR_ECHO_POS);     // and activate pull-ups
   
@@ -164,7 +145,6 @@ void init_right_motor_pwm_timer2()
 void init_debug_led()
 {
   // set port to output for Debug-LED
-  //pinMode(DEBUG_LED, OUTPUT);
   SET_BIT(DEBUG_LED_DDR,DEBUG_LED_POS);
 
   return;
@@ -172,7 +152,6 @@ void init_debug_led()
 
 void init_IR_sensor()
 {
-  //pinMode(IR_SENSOR_FRONT, INPUT_PULLUP);
   CLEAR_BIT(IR_SENSOR_FRONT_DDR, IR_SENSOR_FRONT_POS);  // define as INPUT (not required)
   SET_BIT(IR_SENSOR_FRONT_PORT, IR_SENSOR_FRONT_POS);   // activate internal pullup
 
@@ -226,7 +205,6 @@ int input_capture_timer1()
   {
     if (bit_is_set(TIFR1,TOV1))             // break loop if we got a timeout
     {
-      //Serial.println("TOV1 occured");
       UART_send_string("TOV1 occured\n");
       break;
     }
