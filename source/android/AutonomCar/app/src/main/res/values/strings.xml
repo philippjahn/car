@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">AutonomCar</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="click_me">Click me</string>
+</resources>
