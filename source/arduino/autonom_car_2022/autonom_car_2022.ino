@@ -83,14 +83,23 @@ void loop()
     {
       speed = 255 - (40 << 2) + (ir_sensor_front << 2);
     }
-    else if (ir_sensor_front < 3)
+    else if (ir_sensor_front < 5)
     {
-      speed = 0;
+      direction = BACKWARD;
+      speed = 255;
     }
 
-
-
-    if (ir_sensor_left > ir_sensor_right)
+    if (ir_sensor_left > 65)
+    {
+      steering = LEFT;
+      drift = 127;
+    }
+    else if (ir_sensor_right > 65)
+    {
+      steering = RIGHT;
+      drift = 127;
+    }
+    else if (ir_sensor_left > ir_sensor_right)
     {
       steering = LEFT;
       
