@@ -55,8 +55,17 @@
 #define RIGHT                     0
 #define LEFT                      1
 
-#define DRIFT_FACTOR              2   // right shift by x
+#define DRIFT_FACTOR              0   // right shift by x
+#define DRIFT_HIGH                127
+#define DRIFT_MID                 80
+#define DRIFT_LOW                 40
 
+#define MAX_SPEED                 255
+#define SLOW_DOWN_DISTANCE        100
+#define STOP_DISTANCE             25
+
+#define HARD_TURN                 60
+#define SMOOTH_TURN               20
 
 // Prototypen
 void init_US_sensor_timer1();

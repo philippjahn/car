@@ -116,55 +116,55 @@ void loop()
     speed = 0;
     drift = 0;
 
-    if (ir_sensor_front >= 40)
+    if (ir_sensor_front >= SLOW_DOWN_DISTANCE)
     {
-      speed = 255;
+      speed = MAX_SPEED;
     }
-    else if (ir_sensor_front < 40 && ir_sensor_front >= 3)
+    else if (ir_sensor_front < SLOW_DOWN_DISTANCE && ir_sensor_front >= STOP_DISTANCE)
     {
-      speed = 255 - (40 << 2) + (ir_sensor_front << 2);
+      speed = MAX_SPEED - (SLOW_DOWN_DISTANCE << 1) + (ir_sensor_front << 1) - MAX_SPEED;
     }
-    else if (ir_sensor_front < 5)
+    else if (ir_sensor_front < STOP_DISTANCE)
     {
       direction = BACKWARD;
-      speed = 255;
+      speed = MAX_SPEED / 2;
     }
 
-    if (ir_sensor_left > 65)
+    if (ir_sensor_left > HARD_TURN)
     {
       steering = LEFT;
-      drift = 127;
+      drift = DRIFT_HIGH;
     }
-    else if (ir_sensor_right > 65)
+    else if (ir_sensor_right > HARD_TURN)
     {
       steering = RIGHT;
-      drift = 127;
+      drift = DRIFT_HIGH;
     }
-    else if (ir_sensor_left > ir_sensor_right)
+    else if (ir_sensor_left + 5 > ir_sensor_right)
     {
       steering = LEFT;
       
-      if (ir_sensor_right > 20)
+      if (ir_sensor_right > SMOOTH_TURN)
         drift = 0;
-      else if (ir_sensor_right <= 5)
-        drift = 127;
-      else if (ir_sensor_right <= 10)
-        drift = 80;
+      else if (ir_sensor_right <= SMOOTH_TURN >> 2)
+        drift = DRIFT_HIGH;
+      else if (ir_sensor_right <= SMOOTH_TURN >> 1)
+        drift = DRIFT_MID;
       else
-        drift = 40;
+        drift = DRIFT_LOW;
     }
-    else
+    else if (ir_sensor_right + 5 > ir_sensor_left)
     {
       steering = RIGHT;
       
-      if (ir_sensor_left > 20)
+      if (ir_sensor_left > SMOOTH_TURN)
         drift = 0;
-      else if (ir_sensor_left <= 5)
-        drift = 127;
-      else if (ir_sensor_left <= 10)
-        drift = 80;
+      else if (ir_sensor_left <= SMOOTH_TURN >> 2)
+        drift = DRIFT_HIGH;
+      else if (ir_sensor_left <= SMOOTH_TURN >> 1)
+        drift = DRIFT_MID;
       else
-        drift = 40;
+        drift = DRIFT_LOW;
     }
 
     move(direction, steering, speed, drift);
@@ -196,7 +196,7 @@ void move(uint8_t direction, uint8_t steering, uint8_t speed, uint8_t drift)
   }
 
   // impact of drift by DRIFT_FACTOR in header file
-  drift = drift << DRIFT_FACTOR;
+  drift = drift >> DRIFT_FACTOR;
   
   if (drift == 0)
   {
