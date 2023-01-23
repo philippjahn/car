@@ -1,10 +1,28 @@
 // Erster Test Auto fahren zu lassen und Stopp basierend auf IR-Sensoren
 
+#include <LiquidCrystal.h>
 #include <SharpIR.h>
 #include "autonom_car.h"
 
+#define NUM_SENSORS 4     //Analog Signals -> Front A0, Right A1, Left A2, Batt A3
+
+const int rs = 13, 
+          en = 12, 
+          d4 = 4, 
+          d5 = 9, 
+          d6 = 10, 
+          d7 = 11;
+
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+void lcd_output(int sensor0, int sensor1, int sensor2, int sensor3);
+
 void stop();
 void move(uint8_t direction, uint8_t steering, uint8_t speed, uint8_t drift);
+
+SharpIR sensorFront(SharpIR::GP2Y0A02YK0F, A0);
+SharpIR sensorRight(SharpIR::GP2Y0A21YK0F, A1);
+SharpIR sensorLeft(SharpIR::GP2Y0A21YK0F, A2);
 
 void setup()
 {
@@ -17,6 +35,16 @@ void setup()
   pinMode(BUTTON_WHITE, INPUT_PULLUP);
   pinMode(BUTTON_BLACK, INPUT_PULLUP);
 
+  lcd.begin(16, 2);
+  lcd.setCursor(0,0);
+  lcd.print("Fro ");
+  lcd.setCursor(8,0);
+  lcd.print("Bat ");
+  lcd.setCursor(0,1);
+  lcd.print("Rgt ");
+  lcd.setCursor(8,1);
+  lcd.print("Lft ");
+  
   Serial.begin(9600);
   Serial.println("Serial started...");
 
@@ -25,13 +53,14 @@ void setup()
 
 void loop()
 {
-  SharpIR sensorFront(SharpIR::GP2Y0A02YK0F, A0);
-  SharpIR sensorRight(SharpIR::GP2Y0A21YK0F, A1);
-  SharpIR sensorLeft(SharpIR::GP2Y0A21YK0F, A2);
-
   static uint8_t emergency_stop = 1;
-  static uint8_t ir_sensor_front = 80, ir_sensor_right = 30, ir_sensor_left = 30;
+  
+  uint16_t battery_measurement;
+  float battery_voltage;
 
+  static uint16_t ir_sensor_front = 70, ir_sensor_right = 30, ir_sensor_left = 30;
+  uint16_t ir_sensor_front_new, ir_sensor_right_new, ir_sensor_left_new;
+      
   static uint8_t counter = 0;
 
   uint8_t direction, steering, speed, drift;
@@ -52,23 +81,35 @@ void loop()
   }
 
   // read IR sensor data
-  ir_sensor_front = (ir_sensor_front + sensorFront.getDistance(false) - 19) >> 1; // Stoßstange
-  ir_sensor_right = (ir_sensor_right + sensorRight.getDistance(false) - 9) >> 1;  // Chassis rechts
-  ir_sensor_left = (ir_sensor_left + sensorLeft.getDistance(false) - 9) >> 1;    // Chassis links
+  ir_sensor_front_new = sensorFront.getDistance();
+  ir_sensor_right_new = sensorRight.getDistance();
+  ir_sensor_left_new = sensorLeft.getDistance();
 
-  if (counter >= 15)
+  ir_sensor_front = (ir_sensor_front + ir_sensor_front_new) / 2;
+  ir_sensor_right = (ir_sensor_right + ir_sensor_right_new) / 2;
+  ir_sensor_left = (ir_sensor_left + ir_sensor_left_new) / 2;
+ 
+  // read battery status
+  battery_measurement = analogRead(A3);
+  battery_voltage = (float) battery_measurement * 3.1364 * 0.004883 * 10; // Voltage divided by 690/220 and 1024 = 5V and times 10 to get one decimal place
+
+  if (counter >= 100)
   {
+    lcd_output(ir_sensor_front, battery_voltage, ir_sensor_right, ir_sensor_left);
+    
+    Serial.print("Battery voltage: ");
+    Serial.println(battery_voltage);
     Serial.print("Sensor front: ");
     Serial.println(ir_sensor_front);
     Serial.print("Sensor rechts: ");
     Serial.println(ir_sensor_right);
     Serial.print("Sensor links: ");
     Serial.println(ir_sensor_left);
-    counter = 0;
+    counter = 0; 
   }
   counter++;
-
-  delay(20);
+  //delay(10);
+  
   if (emergency_stop == 0)
   {
     direction = FORWARD;
@@ -136,7 +177,7 @@ void loop()
 void stop()
 {
   move(0, 0, 0, 0);
-
+  
   return;
 }
 
@@ -203,5 +244,70 @@ void move(uint8_t direction, uint8_t steering, uint8_t speed, uint8_t drift)
     }
   }
 
+  return; 
+}
+
+void lcd_output(int sensor0, int sensor1, int sensor2, int sensor3)
+{
+  int sensor_val[NUM_SENSORS];
+  int i;
+  int digit_offset;
+
+  // put your main code here, to run repeatedly:
+  for(i = 0; i <= NUM_SENSORS; i++)
+  {
+    switch(i)
+    {
+      case 0:
+        sensor_val[i] = sensor0;
+        break;
+      case 1:
+        sensor_val[i] = sensor1;
+        break;
+      case 2:
+        sensor_val[i] = sensor2;
+        break;
+      case 3:
+        sensor_val[i] = sensor3;
+        break;
+      default:
+        sensor_val[i] = 0;
+        break;
+    }
+
+    if (sensor_val[i] >= 100)
+      digit_offset = 0;
+    else if (sensor_val[i] >= 10)
+      digit_offset = 1;
+    else
+      digit_offset = 2;
+
+    switch(i)
+    {
+      case 0:
+        lcd.setCursor(4,0);
+        break;
+      case 1:
+        lcd.setCursor(12,0);
+        break;
+      case 2:
+        lcd.setCursor(4,1);
+        break;
+      case 3:
+        lcd.setCursor(12,1);
+        break;
+      default:
+        break;
+    }
+    while(digit_offset != 0)
+    {
+      lcd.print(" ");
+      digit_offset--;
+    }
+    lcd.print(sensor_val[i]);
+    lcd.print(" ");
+    Serial.println(sensor_val[i]);
+  }
+  
   return;
 }
