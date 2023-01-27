@@ -6,11 +6,11 @@
 
 #define NUM_SENSORS 4     //Analog Signals -> Front A0, Right A1, Left A2, Batt A3
 
-const int rs = 13, 
-          en = 12, 
-          d4 = 4, 
-          d5 = 9, 
-          d6 = 10, 
+const int rs = 13,
+          en = 12,
+          d4 = 4,
+          d5 = 9,
+          d6 = 10,
           d7 = 11;
 
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
@@ -36,34 +36,51 @@ void setup()
   pinMode(BUTTON_BLACK, INPUT_PULLUP);
 
   lcd.begin(16, 2);
-  lcd.setCursor(0,0);
+  lcd.setCursor(0, 0);
   lcd.print("Fro ");
-  lcd.setCursor(8,0);
+  lcd.setCursor(8, 0);
   lcd.print("Bat ");
-  lcd.setCursor(0,1);
+  lcd.setCursor(0, 1);
   lcd.print("Rgt ");
-  lcd.setCursor(8,1);
+  lcd.setCursor(8, 1);
   lcd.print("Lft ");
-  
+
   Serial.begin(9600);
   Serial.println("Serial started...");
 
   stop();
 }
 
+#define STOP          0
+#define DRIVE_FORWARD 1
+#define SHARP_LEFT    2
+#define SHARP_RIGHT   3
+#define WAIT          4
+
 void loop()
 {
   static uint8_t emergency_stop = 1;
-  
+
   uint16_t battery_measurement;
   float battery_voltage;
 
   static uint16_t ir_sensor_front = 70, ir_sensor_right = 30, ir_sensor_left = 30;
   uint16_t ir_sensor_front_new, ir_sensor_right_new, ir_sensor_left_new;
-      
+
   static uint8_t counter = 0;
 
+  static uint8_t state_old = STOP;
+  static uint8_t state = STOP;
+
   uint8_t direction, steering, speed, drift;
+
+  static uint8_t speed_left = 0, speed_right = 0;
+
+  int16_t diff_left_right;
+
+  static int previous_millis;
+
+  static int count_level = 0;
 
   if (digitalRead(BUTTON_WHITE) == LOW)
   {
@@ -88,15 +105,21 @@ void loop()
   ir_sensor_front = (ir_sensor_front + ir_sensor_front_new) / 2;
   ir_sensor_right = (ir_sensor_right + ir_sensor_right_new) / 2;
   ir_sensor_left = (ir_sensor_left + ir_sensor_left_new) / 2;
- 
+
+
+  diff_left_right = ir_sensor_right - ir_sensor_left;
+  if (diff_left_right < 0) diff_left_right = diff_left_right * -1;
+
   // read battery status
   battery_measurement = analogRead(A3);
   battery_voltage = (float) battery_measurement * 3.1364 * 0.004883 * 10; // Voltage divided by 690/220 and 1024 = 5V and times 10 to get one decimal place
 
   if (counter >= 100)
   {
-    lcd_output(ir_sensor_front, battery_voltage, ir_sensor_right, ir_sensor_left);
-    
+    lcd_output(ir_sensor_front, state, ir_sensor_right, ir_sensor_left);
+
+    Serial.print("State: ");
+    Serial.println(state);
     Serial.print("Battery voltage: ");
     Serial.println(battery_voltage);
     Serial.print("Sensor front: ");
@@ -105,70 +128,114 @@ void loop()
     Serial.println(ir_sensor_right);
     Serial.print("Sensor links: ");
     Serial.println(ir_sensor_left);
-    counter = 0; 
+    counter = 0;
   }
   counter++;
   //delay(10);
-  
+
   if (emergency_stop == 0)
   {
-    direction = FORWARD;
-    speed = 0;
-    drift = 0;
+    digitalWrite(MOTOR_RIGHT_BACKWARD, LOW); // move forward
+    digitalWrite(MOTOR_LEFT_BACKWARD, LOW); // move forward
 
-    if (ir_sensor_front >= SLOW_DOWN_DISTANCE)
+    switch (state)
     {
-      speed = MAX_SPEED;
-    }
-    else if (ir_sensor_front < SLOW_DOWN_DISTANCE && ir_sensor_front >= STOP_DISTANCE)
-    {
-      speed = MAX_SPEED - (SLOW_DOWN_DISTANCE << 1) + (ir_sensor_front << 1) - MAX_SPEED;
-    }
-    else if (ir_sensor_front < STOP_DISTANCE)
-    {
-      direction = BACKWARD;
-      speed = MAX_SPEED / 2;
-    }
+      case STOP:
+        speed_left = 0;
+        speed_right = 0;
 
-    if (ir_sensor_left > HARD_TURN)
-    {
-      steering = LEFT;
-      drift = DRIFT_HIGH;
-    }
-    else if (ir_sensor_right > HARD_TURN)
-    {
-      steering = RIGHT;
-      drift = DRIFT_HIGH;
-    }
-    else if (ir_sensor_left + 5 > ir_sensor_right)
-    {
-      steering = LEFT;
-      
-      if (ir_sensor_right > SMOOTH_TURN)
-        drift = 0;
-      else if (ir_sensor_right <= SMOOTH_TURN >> 2)
-        drift = DRIFT_HIGH;
-      else if (ir_sensor_right <= SMOOTH_TURN >> 1)
-        drift = DRIFT_MID;
-      else
-        drift = DRIFT_LOW;
-    }
-    else if (ir_sensor_right + 5 > ir_sensor_left)
-    {
-      steering = RIGHT;
-      
-      if (ir_sensor_left > SMOOTH_TURN)
-        drift = 0;
-      else if (ir_sensor_left <= SMOOTH_TURN >> 2)
-        drift = DRIFT_HIGH;
-      else if (ir_sensor_left <= SMOOTH_TURN >> 1)
-        drift = DRIFT_MID;
-      else
-        drift = DRIFT_LOW;
-    }
+        if (ir_sensor_front >= 80)
+        {
+          state_old = state;
+          state = DRIVE_FORWARD;
+        }
+        break;
 
-    move(direction, steering, speed, drift);
+      case DRIVE_FORWARD:
+        if (ir_sensor_front > 80)
+        {
+          speed_left = 255;
+          speed_right = speed_left;
+        }
+        else if (ir_sensor_front <= 80 && ir_sensor_front > 25)
+        {
+          speed_left = 120;//255 - ((ir_sensor_front + 20) << 2); // +20 wegen Mindestmessung
+          speed_right = speed_left;
+        }
+        else if (ir_sensor_front <= 25)
+        {
+          speed_left = 0;
+          speed_right = 0;
+        }
+
+        if (diff_left_right <= 20 && ir_sensor_front > 25)
+        {
+          if (ir_sensor_right + 5 > ir_sensor_left)
+          {
+            speed_right = speed_right - 60;
+          }
+          else if (ir_sensor_left + 5 > ir_sensor_right)
+          {
+            speed_left = speed_left - 60;
+          }
+        }
+
+        if (ir_sensor_right > 60)
+        {
+          count_level++;
+          if (count_level >= 10)
+          {
+            state_old = state;
+            state = SHARP_RIGHT;
+          }
+        }
+        else if (ir_sensor_left > 60)
+        {
+          count_level++;
+          if (count_level >= 10)
+          {
+            state_old = state;
+            state = SHARP_LEFT;
+          }
+        }
+        else
+        {
+          count_level = 0;
+        }
+        break;
+
+      case SHARP_RIGHT:
+        speed_left = 255;
+        speed_right = 0;
+        previous_millis = millis();
+        state_old = state;
+        state = WAIT;
+        break;
+
+      case SHARP_LEFT:
+        speed_left = 0;
+        speed_right = 255;
+        previous_millis = millis();
+        state_old = state;
+        state = WAIT;
+        break;
+
+      case WAIT:
+        if (millis() - previous_millis >= 400)
+        {
+          state_old = state;
+          state = DRIVE_FORWARD;
+        }
+        break;
+
+      default:
+        break;
+    }
+    analogWrite(MOTOR_RIGHT_SPEED, speed_right);
+    analogWrite(MOTOR_LEFT_SPEED, speed_left);
+
   }
+
 
   return;
 }
@@ -177,13 +244,13 @@ void loop()
 void stop()
 {
   move(0, 0, 0, 0);
-  
+
   return;
 }
 
 void move(uint8_t direction, uint8_t steering, uint8_t speed, uint8_t drift)
 {
- 
+
   if (direction == FORWARD) // forward
   {
     digitalWrite(MOTOR_RIGHT_BACKWARD, LOW);
@@ -197,7 +264,7 @@ void move(uint8_t direction, uint8_t steering, uint8_t speed, uint8_t drift)
 
   // impact of drift by DRIFT_FACTOR in header file
   drift = drift >> DRIFT_FACTOR;
-  
+
   if (drift == 0)
   {
     analogWrite(MOTOR_RIGHT_SPEED, speed);
@@ -244,7 +311,7 @@ void move(uint8_t direction, uint8_t steering, uint8_t speed, uint8_t drift)
     }
   }
 
-  return; 
+  return;
 }
 
 void lcd_output(int sensor0, int sensor1, int sensor2, int sensor3)
@@ -254,9 +321,9 @@ void lcd_output(int sensor0, int sensor1, int sensor2, int sensor3)
   int digit_offset;
 
   // put your main code here, to run repeatedly:
-  for(i = 0; i <= NUM_SENSORS; i++)
+  for (i = 0; i < NUM_SENSORS; i++)
   {
-    switch(i)
+    switch (i)
     {
       case 0:
         sensor_val[i] = sensor0;
@@ -282,24 +349,24 @@ void lcd_output(int sensor0, int sensor1, int sensor2, int sensor3)
     else
       digit_offset = 2;
 
-    switch(i)
+    switch (i)
     {
       case 0:
-        lcd.setCursor(4,0);
+        lcd.setCursor(4, 0);
         break;
       case 1:
-        lcd.setCursor(12,0);
+        lcd.setCursor(12, 0);
         break;
       case 2:
-        lcd.setCursor(4,1);
+        lcd.setCursor(4, 1);
         break;
       case 3:
-        lcd.setCursor(12,1);
+        lcd.setCursor(12, 1);
         break;
       default:
         break;
     }
-    while(digit_offset != 0)
+    while (digit_offset != 0)
     {
       lcd.print(" ");
       digit_offset--;
@@ -308,6 +375,6 @@ void lcd_output(int sensor0, int sensor1, int sensor2, int sensor3)
     lcd.print(" ");
     Serial.println(sensor_val[i]);
   }
-  
+
   return;
 }
