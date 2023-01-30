@@ -118,16 +118,18 @@ void loop()
   {
     lcd_output(ir_sensor_front, state, ir_sensor_right, ir_sensor_left);
 
-    Serial.print("State: ");
-    Serial.println(state);
-    Serial.print("Battery voltage: ");
-    Serial.println(battery_voltage);
-    Serial.print("Sensor front: ");
-    Serial.println(ir_sensor_front);
-    Serial.print("Sensor rechts: ");
-    Serial.println(ir_sensor_right);
-    Serial.print("Sensor links: ");
-    Serial.println(ir_sensor_left);
+    Serial.print("State: \t");
+    Serial.print(state);
+    Serial.print("\tBatt: \t");
+    Serial.print(battery_voltage);
+    Serial.print("\tFront: \t");
+    Serial.print(ir_sensor_front);
+    Serial.print("\tRight: \t");
+    Serial.print(ir_sensor_right);
+    Serial.print("\tLeft: \t");
+    Serial.print(ir_sensor_left);
+    Serial.print("\tDiff: \t");
+    Serial.println(diff_left_right);
     counter = 0;
   }
   counter++;
@@ -159,7 +161,7 @@ void loop()
         }
         else if (ir_sensor_front <= 80 && ir_sensor_front > 25)
         {
-          speed_left = 120;//255 - ((ir_sensor_front + 20) << 2); // +20 wegen Mindestmessung
+          speed_left = 255 - ((ir_sensor_front + 20) << 2); // +20 wegen Mindestmessung
           speed_right = speed_left;
         }
         else if (ir_sensor_front <= 25)
@@ -172,52 +174,50 @@ void loop()
         {
           if (ir_sensor_right + 5 > ir_sensor_left)
           {
-            speed_right = speed_right - 60;
+            speed_right = 120;//speed_right - 60;
+            speed_left = 255;
           }
           else if (ir_sensor_left + 5 > ir_sensor_right)
           {
-            speed_left = speed_left - 60;
+            speed_left = 120;//speed_left - 60;
+            speed_right = 255;
           }
         }
 
         if (ir_sensor_right > 60)
         {
-          count_level++;
-          if (count_level >= 10)
-          {
             state_old = state;
             state = SHARP_RIGHT;
-          }
         }
         else if (ir_sensor_left > 60)
         {
-          count_level++;
-          if (count_level >= 10)
-          {
             state_old = state;
             state = SHARP_LEFT;
-          }
-        }
-        else
-        {
-          count_level = 0;
         }
         break;
 
       case SHARP_RIGHT:
         speed_left = 255;
-        speed_right = 0;
-        previous_millis = millis();
-        state_old = state;
-        state = WAIT;
+        speed_right = 80;
+
+
+        if (ir_sensor_front > 80)
+        {
+          state_old = state;
+          state = DRIVE_FORWARD;
+        }
+        
         break;
 
       case SHARP_LEFT:
-        speed_left = 0;
+        speed_left = 80;
         speed_right = 255;
-        previous_millis = millis();
-        state_old = state;
-        state = WAIT;
+
+        if (ir_sensor_front > 80 )
+        {
+          state_old = state;
+          state = DRIVE_FORWARD;
+        }
         break;
 
       case WAIT:
@@ -231,6 +231,7 @@ void loop()
       default:
         break;
     }
+    
     analogWrite(MOTOR_RIGHT_SPEED, speed_right);
     analogWrite(MOTOR_LEFT_SPEED, speed_left);
 
@@ -373,7 +374,6 @@ void lcd_output(int sensor0, int sensor1, int sensor2, int sensor3)
     }
     lcd.print(sensor_val[i]);
     lcd.print(" ");
-    Serial.println(sensor_val[i]);
   }
 
   return;
