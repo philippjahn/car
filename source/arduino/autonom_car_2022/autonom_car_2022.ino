@@ -41,11 +41,11 @@ void setup()
   lcd.setCursor(8, 0);
   lcd.print("Bat ");
   lcd.setCursor(0, 1);
-  lcd.print("Rgt ");
-  lcd.setCursor(8, 1);
   lcd.print("Lft ");
+  lcd.setCursor(8, 1);
+  lcd.print("Rgt ");
 
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("Serial started...");
 
   stop();
@@ -102,9 +102,9 @@ void loop()
   ir_sensor_right_new = sensorRight.getDistance();
   ir_sensor_left_new = sensorLeft.getDistance();
 
-  ir_sensor_front = (ir_sensor_front + ir_sensor_front_new) / 2;
-  ir_sensor_right = (ir_sensor_right + ir_sensor_right_new) / 2;
-  ir_sensor_left = (ir_sensor_left + ir_sensor_left_new) / 2;
+  ir_sensor_front = ir_sensor_front_new;//(ir_sensor_front + ir_sensor_front_new) / 2;
+  ir_sensor_right = ir_sensor_right_new;//(ir_sensor_right + ir_sensor_right_new) / 2;
+  ir_sensor_left = ir_sensor_left_new;//(ir_sensor_left + ir_sensor_left_new) / 2;
 
 
   diff_left_right = ir_sensor_right - ir_sensor_left;
@@ -116,17 +116,17 @@ void loop()
 
   if (counter >= 100)
   {
-    lcd_output(ir_sensor_front, state, ir_sensor_right, ir_sensor_left);
+    lcd_output(ir_sensor_front, state, ir_sensor_left, ir_sensor_right);
 
     Serial.print("State: \t");
     Serial.print(state);
     Serial.print("\tBatt: \t");
     Serial.print(battery_voltage);
     Serial.print("\tFront: \t");
-    Serial.print(ir_sensor_front);
-    Serial.print("\tRight: \t");
     Serial.print(ir_sensor_right);
     Serial.print("\tLeft: \t");
+    Serial.print(ir_sensor_front);
+    Serial.print("\tRight: \t");
     Serial.print(ir_sensor_left);
     Serial.print("\tDiff: \t");
     Serial.println(diff_left_right);
@@ -146,7 +146,7 @@ void loop()
         speed_left = 0;
         speed_right = 0;
 
-        if (ir_sensor_front >= 80)
+        if (ir_sensor_front >= 40)
         {
           state_old = state;
           state = DRIVE_FORWARD;
@@ -157,7 +157,7 @@ void loop()
         if (ir_sensor_front > 80)
         {
           speed_left = 255;
-          speed_right = speed_left;
+          speed_right = 255;
         }
         else if (ir_sensor_front <= 80 && ir_sensor_front > 25)
         {
@@ -170,14 +170,14 @@ void loop()
           speed_right = 0;
         }
 
-        if (diff_left_right <= 20 && ir_sensor_front > 25)
+        if (1 || ir_sensor_front > 25)
         {
-          if (ir_sensor_right + 5 > ir_sensor_left)
+          if (ir_sensor_right > ir_sensor_left)
           {
             speed_right = 120;//speed_right - 60;
             speed_left = 255;
           }
-          else if (ir_sensor_left + 5 > ir_sensor_right)
+          else if (ir_sensor_left > ir_sensor_right)
           {
             speed_left = 120;//speed_left - 60;
             speed_right = 255;
@@ -186,34 +186,35 @@ void loop()
 
         if (ir_sensor_right > 60)
         {
-            state_old = state;
-            state = SHARP_RIGHT;
+          state_old = state;
+          state = SHARP_RIGHT;
         }
         else if (ir_sensor_left > 60)
         {
-            state_old = state;
-            state = SHARP_LEFT;
+          state_old = state;
+          state = SHARP_LEFT;
         }
         break;
 
       case SHARP_RIGHT:
         speed_left = 255;
-        speed_right = 80;
+        speed_right = 70;
 
+      
 
-        if (ir_sensor_front > 80)
+        if (ir_sensor_front > 130)
         {
           state_old = state;
           state = DRIVE_FORWARD;
         }
-        
+
         break;
 
       case SHARP_LEFT:
-        speed_left = 80;
+        speed_left = 70;
         speed_right = 255;
 
-        if (ir_sensor_front > 80 )
+        if (ir_sensor_front > 130 )
         {
           state_old = state;
           state = DRIVE_FORWARD;
@@ -231,7 +232,15 @@ void loop()
       default:
         break;
     }
-    
+
+    if (ir_sensor_front < 20)
+    {
+      speed_left = 0;
+      speed_right = 0;
+      state_old = state;
+      state = STOP;
+    }
+
     analogWrite(MOTOR_RIGHT_SPEED, speed_right);
     analogWrite(MOTOR_LEFT_SPEED, speed_left);
 
