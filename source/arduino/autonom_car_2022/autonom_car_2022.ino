@@ -45,7 +45,7 @@ void setup()
   lcd.setCursor(8, 1);
   lcd.print("Rgt ");
 
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial.println("Serial started...");
 
   stop();
@@ -102,7 +102,14 @@ void loop()
   ir_sensor_right_new = sensorRight.getDistance();
   ir_sensor_left_new = sensorLeft.getDistance();
 
-  ir_sensor_front = ir_sensor_front_new;//(ir_sensor_front + ir_sensor_front_new) / 2;
+  if (ir_sensor_front > (ir_sensor_front_new << 1))
+  {
+    ir_sensor_front = ir_sensor_front - 10;
+  }
+  else
+  {
+    ir_sensor_front = ir_sensor_front_new;//(ir_sensor_front + ir_sensor_front_new) / 2;  
+  }
   ir_sensor_right = ir_sensor_right_new;//(ir_sensor_right + ir_sensor_right_new) / 2;
   ir_sensor_left = ir_sensor_left_new;//(ir_sensor_left + ir_sensor_left_new) / 2;
 
@@ -114,7 +121,7 @@ void loop()
   battery_measurement = analogRead(A3);
   battery_voltage = (float) battery_measurement * 3.1364 * 0.004883 * 10; // Voltage divided by 690/220 and 1024 = 5V and times 10 to get one decimal place
 
-  if (counter >= 100)
+  if (counter >= 1)
   {
     lcd_output(ir_sensor_front, state, ir_sensor_left, ir_sensor_right);
 
@@ -123,11 +130,11 @@ void loop()
     Serial.print("\tBatt: \t");
     Serial.print(battery_voltage);
     Serial.print("\tFront: \t");
-    Serial.print(ir_sensor_right);
-    Serial.print("\tLeft: \t");
     Serial.print(ir_sensor_front);
-    Serial.print("\tRight: \t");
+    Serial.print("\tLeft: \t");
     Serial.print(ir_sensor_left);
+    Serial.print("\tRight: \t");
+    Serial.print(ir_sensor_right);
     Serial.print("\tDiff: \t");
     Serial.println(diff_left_right);
     counter = 0;
@@ -170,7 +177,7 @@ void loop()
           speed_right = 0;
         }
 
-        if (1 || ir_sensor_front > 25)
+        if (diff_left_right < 20 && ir_sensor_front > 25)
         {
           if (ir_sensor_right > ir_sensor_left)
           {
@@ -184,12 +191,12 @@ void loop()
           }
         }
 
-        if (ir_sensor_right > 60)
+        else if (ir_sensor_right > 65)
         {
           state_old = state;
           state = SHARP_RIGHT;
         }
-        else if (ir_sensor_left > 60)
+        else if (ir_sensor_left > 65)
         {
           state_old = state;
           state = SHARP_LEFT;
@@ -200,29 +207,24 @@ void loop()
         speed_left = 255;
         speed_right = 70;
 
-      
-
-        if (ir_sensor_front > 130)
-        {
-          state_old = state;
-          state = DRIVE_FORWARD;
-        }
-
+        previous_millis = millis();
+        
+        state_old = state;
+        state = WAIT;
         break;
 
       case SHARP_LEFT:
         speed_left = 70;
         speed_right = 255;
 
-        if (ir_sensor_front > 130 )
-        {
-          state_old = state;
-          state = DRIVE_FORWARD;
-        }
+        previous_millis = millis();
+
+        state_old = state;
+        state = WAIT;
         break;
 
       case WAIT:
-        if (millis() - previous_millis >= 400)
+        if (millis() - previous_millis >= 1200)
         {
           state_old = state;
           state = DRIVE_FORWARD;
