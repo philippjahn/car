@@ -2,7 +2,6 @@
 
 #include <LiquidCrystal_I2C.h>
 #include <SharpIR.h>
-#include <Wire.h>
 #include "autonom_car.h"
 
 #define NUM_SENSORS 4     //Analog Signals -> Front A0, Right A1, Left A2, Batt A3
