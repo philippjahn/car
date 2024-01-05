@@ -1,14 +1,19 @@
 // Erster Test Auto fahren zu lassen und Stopp basierend auf IR-Sensoren
 
-#include <LiquidCrystal_I2C.h>
+#include <LiquidCrystal.h>
 #include <SharpIR.h>
-#include <Wire.h>
 #include "autonom_car.h"
 
 #define NUM_SENSORS 4     //Analog Signals -> Front A0, Right A1, Left A2, Batt A3
 
-// define display address, number of columns and rows
-LiquidCrystal_I2C lcd(0x27, 16, 2);   
+const int rs = 13,
+          en = 12,
+          d4 = 4,
+          d5 = 9,
+          d6 = 10,
+          d7 = 11;
+
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 void lcd_output(int sensor0, int sensor1, int sensor2, int sensor3);
 
@@ -30,11 +35,7 @@ void setup()
   pinMode(BUTTON_WHITE, INPUT_PULLUP);
   pinMode(BUTTON_BLACK, INPUT_PULLUP);
 
-  // initialize the lcd screen
-  lcd.init();
-  // turn the backlight on
-  lcd.backlight();
-
+  lcd.begin(16, 2);
   lcd.setCursor(0, 0);
   lcd.print("Fro ");
   lcd.setCursor(8, 0);
@@ -44,7 +45,7 @@ void setup()
   lcd.setCursor(8, 1);
   lcd.print("Lft ");
 
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial.println("Serial started...");
 
   stop();
