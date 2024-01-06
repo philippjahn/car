@@ -1,4 +1,17 @@
-// Erster Test Auto fahren zu lassen und Stopp basierend auf IR-Sensoren
+/**
+ * Autonom Driving Car - Crazy Car
+ * Algorithm to navigate through the race track as fast as possible
+ * (C) Philipp Jahn
+ * 
+ * Version includes:
+ * - Some kind of timeslices
+ * - stable sensor values
+ * -
+ * 
+ * Todos: 
+ * - test algorithm in track
+ * - Todo tags to be checked
+ */
 
 #include "autonom_car.h"
 #include "sensors.h"
@@ -68,19 +81,20 @@ void loop()
   battery_measurement = analogRead(A3);
   battery_voltage = (float) battery_measurement * 3.1364 * 0.004883 * 10; // Voltage divided by 690/220 and 1024 = 5V and times 10 to get one decimal place
 
-  if (millis() - previous_millis_250ms >= 100)
+  // timeslices - to be done every 250ms
+  if (millis() - previous_millis_250ms >= 250)
   {
     previous_millis_250ms = millis();
 
-    // update values
-
-    //Analog Signals -> Front A0, Right A1, Left A2, Batt A3
+    // Analog Signals -> Front A0, Right A1, Left A2, Batt A3
+    // TODO change state to battery output
     lcd_output(ir_sensor_front, state, ir_sensor_right, ir_sensor_left, 4);
 
-    // TODO FUnktion schreiben
+    // TODO Funktion schreiben
     Serial.print("State: \t"); Serial.print(state); Serial.print("\tBatt: \t"); Serial.print(battery_voltage); Serial.print("\tFront: \t"); Serial.print(ir_sensor_front); Serial.print("\tRight: \t"); Serial.print(ir_sensor_right); Serial.print("\tLeft: \t"); Serial.print(ir_sensor_left); Serial.print("\tDiff: \t"); Serial.println(diff_left_right);
   }
 
+  // timeslices - to be done every 20ms
   if (millis() - previous_millis_20ms >= 20)
   {
     previous_millis_20ms = millis();
@@ -195,10 +209,6 @@ void loop()
         {
           state = DRIVE_FORWARD;
         }
-        break;
-
-      case OVERFLOW:
-        // stay here - info if calc was not in time
         break;
 
       default:

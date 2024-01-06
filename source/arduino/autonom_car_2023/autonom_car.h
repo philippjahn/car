@@ -25,4 +25,3 @@
 #define DRIVE_BACKWARD            3
 #define SHARP_RIGHT               4
 #define SHARP_LEFT                5
-#define OVERFLOW                  6
