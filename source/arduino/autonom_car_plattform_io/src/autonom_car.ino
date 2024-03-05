@@ -82,20 +82,20 @@ void loop()
   battery_voltage = (float) battery_measurement * 3.1364 * 0.004883 * 10; // Voltage divided by 690/220 and 1024 = 5V and times 10 to get one decimal place
 
   // timeslices - to be done every 250ms
-  if (millis() - previous_millis_250ms >= 250)
+  if (millis() - previous_millis_250ms >= 40)
   {
     previous_millis_250ms = millis();
 
     // Analog Signals -> Front A0, Right A1, Left A2, Batt A3
     // TODO change state to battery output
-    //lcd_output(ir_sensor_front, state, ir_sensor_right, ir_sensor_left, 4);
+    lcd_output(ir_sensor_front, state, ir_sensor_right, ir_sensor_left, 4);
 
     // TODO Funktion schreiben
-    // Serial.print("State: \t"); Serial.print(state); Serial.print("\tBatt: \t"); Serial.print(battery_voltage); Serial.print("\tFront: \t"); Serial.print(ir_sensor_front); Serial.print("\tRight: \t"); Serial.print(ir_sensor_right); Serial.print("\tLeft: \t"); Serial.print(ir_sensor_left); Serial.print("\tDiff: \t"); Serial.println(diff_left_right);
+    Serial.print("State: \t"); Serial.print(state); Serial.print("\tBatt: \t"); Serial.print(battery_voltage); Serial.print("\tFront: \t"); Serial.print(ir_sensor_front); Serial.print("\tRight: \t"); Serial.print(ir_sensor_right); Serial.print("\tLeft: \t"); Serial.print(ir_sensor_left); Serial.print("\tDiff: \t"); Serial.println(diff_left_right);
   }
 
   // timeslices - to be done every 20ms
-  if (millis() - previous_millis_20ms >= 20)
+  if (millis() - previous_millis_20ms >= 40)
   {
     previous_millis_20ms = millis();
 
