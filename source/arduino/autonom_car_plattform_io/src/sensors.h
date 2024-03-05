@@ -4,9 +4,9 @@ extern SharpIR sensorFront;
 extern SharpIR sensorLeft;
 extern SharpIR sensorRight;
 
-extern uint16_t ir_sensor_front;
-extern uint16_t ir_sensor_right;
-extern uint16_t ir_sensor_left;
+extern int16_t ir_sensor_front;
+extern int16_t ir_sensor_right;
+extern int16_t ir_sensor_left;
 
 extern int16_t diff_left_right;
 

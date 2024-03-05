@@ -82,7 +82,7 @@ void loop()
   battery_voltage = (float) battery_measurement * 3.1364 * 0.004883 * 10; // Voltage divided by 690/220 and 1024 = 5V and times 10 to get one decimal place
 
   // timeslices - to be done every 250ms
-  if (millis() - previous_millis_250ms >= 40)
+  if (millis() - previous_millis_250ms >= 20)
   {
     previous_millis_250ms = millis();
 
@@ -95,7 +95,7 @@ void loop()
   }
 
   // timeslices - to be done every 20ms
-  if (millis() - previous_millis_20ms >= 40)
+  if (millis() - previous_millis_20ms >= 20)
   {
     previous_millis_20ms = millis();
 
@@ -148,29 +148,28 @@ void loop()
           state = DRIVE_BACKWARD;
         }
 
-        //if (diff_left_right <= 20)
-        //{
-        if (ir_sensor_right + 2 > ir_sensor_left)
+        if (ir_sensor_right > 60)
         {
-          speed_right = LOW_SPEED;
-          speed_left = MAX_SPEED;
-        }
-        else if (ir_sensor_left + 2  > ir_sensor_right)
-        {
-          speed_left = LOW_SPEED;
-          speed_right = MAX_SPEED;
-        }
-        //}
-
-        //TODO
-        /*if (ir_sensor_right > 60)
-          {
           state = SHARP_RIGHT;
-          }
-          else if (ir_sensor_left > 60)
-          {
+        }
+        else if (ir_sensor_left > 60)
+        {
           state = SHARP_LEFT;
-          }*/
+        }
+
+        if (diff_left_right <= 20)
+        {
+          if (ir_sensor_right + 2 > ir_sensor_left)
+          {
+            speed_right = MID_SPEED;
+            speed_left = MAX_SPEED;
+          }
+          else if (ir_sensor_left + 2  > ir_sensor_right)
+          {
+            speed_right = MAX_SPEED;
+            speed_left = MID_SPEED;
+          }
+        }
         break;
 
       case DRIVE_BACKWARD:
