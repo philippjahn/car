@@ -82,7 +82,7 @@ void loop()
   battery_voltage = (float) battery_measurement * 3.1364 * 0.004883 * 10; // Voltage divided by 690/220 and 1024 = 5V and times 10 to get one decimal place
 
   // timeslices - to be done every 250ms
-  if (millis() - previous_millis_250ms >= 20)
+  if (millis() - previous_millis_250ms >= 100)
   {
     previous_millis_250ms = millis();
 
