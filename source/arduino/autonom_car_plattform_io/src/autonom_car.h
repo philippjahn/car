@@ -35,7 +35,7 @@
 #define FORWARD_MAX_SPEED_THRESHOLD  150
 
 #define MAX_SPEED                 255
-#define MID_SPEED                 70  // speed where auto starts moving without help
+#define MID_SPEED                 80  // speed where auto starts moving without help
 #define LOW_SPEED                 45  // speed where auto does not move anymore even with help
 #define STOP_SPEED                0
 

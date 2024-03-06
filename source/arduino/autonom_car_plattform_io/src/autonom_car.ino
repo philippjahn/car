@@ -57,7 +57,7 @@ void loop()
 {
   uint16_t battery_measurement;
   float battery_voltage;
-  uint8_t correction_factor;
+  uint8_t correction_factor = 0;
 
   static uint8_t state_old = EMERGENCY_STOP;
   static uint8_t state = EMERGENCY_STOP;
@@ -157,10 +157,11 @@ void loop()
           state = DRIVE_BACKWARD;
         }
 
-        if (diff_left_right > 1 && diff_left_right <= 20)
+        if (diff_left_right > 1 && diff_left_right <= 10)
         {
-          correction_factor = diff_left_right << 1;
+          correction_factor = diff_left_right;
         }
+        /*
         else if (diff_left_right > 20)
         {
           correction_factor = diff_left_right << 2;
@@ -175,7 +176,7 @@ void loop()
           correction_factor = 200;
         }
 
-
+      */
 
         if (ir_sensor_right > ir_sensor_left)
         {
