@@ -5,8 +5,8 @@
 #define DEBUG_LED                 13
 
 #define IR_SENSOR_FRONT           A0
-#define IR_SENSOR_RIGHT           A1
-#define IR_SENSOR_LEFT            A2
+#define IR_SENSOR_RIGHT           A2
+#define IR_SENSOR_LEFT            A1
 
 #define BATTERY_CHECK             A3
 
@@ -24,5 +24,21 @@
 #define STOP                      1
 #define DRIVE_FORWARD             2
 #define DRIVE_BACKWARD            3
-#define SHARP_RIGHT               4
-#define SHARP_LEFT                5
+#define LEFT_RIGHT                4
+#define SHARP_RIGHT               5
+#define SHARP_LEFT                6
+
+#define BACKWARD_THRESHOLD        22
+#define FORWARD_THRESHOLD         35
+
+// CONFIGURATION NUMBERS
+#define FORWARD_MAX_SPEED_THRESHOLD  150
+
+#define MAX_SPEED                 255
+#define MID_SPEED                 70  // speed where auto starts moving without help
+#define LOW_SPEED                 45  // speed where auto does not move anymore even with help
+#define STOP_SPEED                0
+
+#define DRIFT_FACTOR              0   // right shift by x
+
+#define SHARP_TURN_VALUE          75

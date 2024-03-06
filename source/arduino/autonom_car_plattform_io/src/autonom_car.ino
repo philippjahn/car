@@ -13,6 +13,7 @@
  * - Todo tags to be checked
  */
 
+#include <Arduino.h>
 #include "autonom_car.h"
 #include "sensors.h"
 #include "motors.h"
@@ -56,6 +57,7 @@ void loop()
 {
   uint16_t battery_measurement;
   float battery_voltage;
+  uint8_t correction_factor;
 
   static uint8_t state_old = EMERGENCY_STOP;
   static uint8_t state = EMERGENCY_STOP;
@@ -65,6 +67,8 @@ void loop()
   static unsigned long previous_millis_250ms;
 
   static unsigned long previous_millis_20ms;
+
+  static uint8_t delay_once = 0;
 
   // highest priority
   if (digitalRead(BUTTON_BLACK) == LOW)
@@ -88,19 +92,18 @@ void loop()
 
     // Analog Signals -> Front A0, Right A1, Left A2, Batt A3
     // TODO change state to battery output
-    lcd_output(ir_sensor_front, state, ir_sensor_right, ir_sensor_left, 4);
+    lcd_output(diff_left_right, state, ir_sensor_right, ir_sensor_left, 4);
 
     // TODO Funktion schreiben
     Serial.print("State: \t"); Serial.print(state); Serial.print("\tBatt: \t"); Serial.print(battery_voltage); Serial.print("\tFront: \t"); Serial.print(ir_sensor_front); Serial.print("\tRight: \t"); Serial.print(ir_sensor_right); Serial.print("\tLeft: \t"); Serial.print(ir_sensor_left); Serial.print("\tDiff: \t"); Serial.println(diff_left_right);
   }
 
   // timeslices - to be done every 20ms
-  if (millis() - previous_millis_20ms >= 20)
+  if (millis() - previous_millis_20ms >=20)
   {
     previous_millis_20ms = millis();
 
     measure_distances();
-
 
     state_old = state;
 
@@ -109,7 +112,6 @@ void loop()
       case EMERGENCY_STOP:
         speed_left = STOP_SPEED;
         speed_right = STOP_SPEED;
-
         // only way to start by pressing the start button
         break;
 
@@ -128,6 +130,13 @@ void loop()
         break;
 
       case DRIVE_FORWARD:
+        if (state_old == DRIVE_BACKWARD)
+        {
+          analogWrite(MOTOR_RIGHT_SPEED, STOP_SPEED);
+          analogWrite(MOTOR_LEFT_SPEED, STOP_SPEED);
+          delay(100);   // avoid to fast switching from backward to forward
+        }
+
         digitalWrite(MOTOR_RIGHT_BACKWARD, LOW); // move forward
         digitalWrite(MOTOR_LEFT_BACKWARD, LOW); // move forward
 
@@ -138,7 +147,7 @@ void loop()
         }
         else if (ir_sensor_front <= FORWARD_MAX_SPEED_THRESHOLD && ir_sensor_front > BACKWARD_THRESHOLD)
         {
-          speed_left = LOW_SPEED;    // TODO ??? 255 - ((ir_sensor_front + 20) << 2); // +20 wegen Mindestmessung
+          speed_left = ir_sensor_front * 1.64 + 8.9;  // k, d taken from excel calculation
           speed_right = speed_left;
         }
         else
@@ -148,31 +157,61 @@ void loop()
           state = DRIVE_BACKWARD;
         }
 
-        if (ir_sensor_right > 60)
+        if (diff_left_right > 1 && diff_left_right <= 20)
         {
-          state = SHARP_RIGHT;
+          correction_factor = diff_left_right << 1;
         }
-        else if (ir_sensor_left > 60)
+        else if (diff_left_right > 20)
         {
-          state = SHARP_LEFT;
+          correction_factor = diff_left_right << 2;
         }
 
-        if (diff_left_right <= 20)
+        if (ir_sensor_right > SHARP_TURN_VALUE)
         {
-          if (ir_sensor_right + 2 > ir_sensor_left)
-          {
-            speed_right = MID_SPEED;
-            speed_left = MAX_SPEED;
-          }
-          else if (ir_sensor_left + 2  > ir_sensor_right)
-          {
-            speed_right = MAX_SPEED;
-            speed_left = MID_SPEED;
-          }
+          correction_factor = 200;
         }
+        else if (ir_sensor_left > SHARP_TURN_VALUE)
+        {
+          correction_factor = 200;
+        }
+
+
+
+        if (ir_sensor_right > ir_sensor_left)
+        {
+          speed_right = diff16(speed_right, correction_factor);
+          speed_left = add16(speed_left, correction_factor);
+        }
+        else if (ir_sensor_left > ir_sensor_right)
+        {
+          speed_right = add16(speed_right, correction_factor);
+          speed_left = diff16(speed_left, correction_factor);
+        }
+
+        //state = LEFT_RIGHT;
+        
+        /*else
+        {
+          if (ir_sensor_right_last >= SHARP_RIGHT_VALUE && ir_sensor_right > SHARP_RIGHT_VALUE)
+          {
+            state = SHARP_RIGHT;
+          }
+          else if (ir_sensor_left_last >= SHARP_LEFT_VALUE && ir_sensor_left > SHARP_LEFT_VALUE)
+          {
+            state = SHARP_LEFT;
+          }
+        }*/
+
         break;
 
       case DRIVE_BACKWARD:
+        if (state_old == DRIVE_FORWARD)
+        {
+          analogWrite(MOTOR_RIGHT_SPEED, STOP_SPEED);
+          analogWrite(MOTOR_LEFT_SPEED, STOP_SPEED);
+          delay(100);   // avoid to fast switching from forward to backward
+        }
+
         digitalWrite(MOTOR_RIGHT_BACKWARD, HIGH); // move backward
         digitalWrite(MOTOR_LEFT_BACKWARD, HIGH); // move backward
 
@@ -188,24 +227,63 @@ void loop()
 
         break;
 
+      case LEFT_RIGHT:
+        if (diff_left_right == 0)
+        {
+          state = DRIVE_FORWARD;
+          break; 
+        }
+        else if (ir_sensor_front <= BACKWARD_THRESHOLD)
+        {
+          state = DRIVE_BACKWARD;
+        }
+        else
+        {
+          if (ir_sensor_right > ir_sensor_left)
+          {
+            speed_right = MAX_SPEED + (diff_left_right *3);
+            speed_left = LOW_SPEED;
+          }
+          else if (ir_sensor_left  > ir_sensor_right)
+          {
+            speed_right = LOW_SPEED;
+            speed_left = MAX_SPEED + (diff_left_right *3);
+          }
+        }
+
+        break;
+
       case SHARP_RIGHT:
         speed_left = 255;
-        speed_right = 80;
+        speed_right = LOW_SPEED;
 
-
-        if (ir_sensor_front > 80)
+        if(delay_once == 0)
         {
+          delay(200);
+          delay_once = 1;
+        }
+
+        if (ir_sensor_front > 120)
+        {
+          delay_once = 0;
           state = DRIVE_FORWARD;
         }
 
         break;
 
       case SHARP_LEFT:
-        speed_left = 80;
+        speed_left = LOW_SPEED;
         speed_right = 255;
 
-        if (ir_sensor_front > 80 )
+        if(delay_once == 0)
         {
+          delay(200);
+          delay_once = 1;
+        }
+
+        if (ir_sensor_front > 120 )
+        {
+          delay_once = 0;
           state = DRIVE_FORWARD;
         }
         break;
@@ -218,4 +296,29 @@ void loop()
     analogWrite(MOTOR_LEFT_SPEED, speed_left);
   }
   return;
+}
+
+
+uint8_t add16(uint8_t summand1, uint8_t summand2)
+{
+  int16_t sum = summand1 + summand2;
+
+  if (sum > 255)
+  {
+    sum = 255;
+  }
+
+  return (uint8_t) sum;
+}
+
+uint8_t diff16(uint8_t minuend, uint8_t subtrahend)
+{
+  int16_t difference = minuend - subtrahend;
+
+  if (difference < 0)
+  {
+    difference = 0;
+  }
+  
+  return (uint8_t) difference;
 }
