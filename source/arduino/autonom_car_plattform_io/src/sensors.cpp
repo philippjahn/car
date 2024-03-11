@@ -20,7 +20,7 @@ void measure_distances()
    
   // read IR sensor data
   ir_sensor_front_raw = analogRead(IR_SENSOR_FRONT);
-	ir_sensor_front_new = (uint16_t) (16256 / (ir_sensor_front_raw + 22.8)) - 8;
+	ir_sensor_front_new = (uint16_t) (16256.4 / (ir_sensor_front_raw + 22.8)) - 8;
 
 	if(ir_sensor_front_new > 150)
     ir_sensor_front_new = 151;
@@ -29,7 +29,7 @@ void measure_distances()
 
 
   ir_sensor_right_raw = analogRead(IR_SENSOR_RIGHT);
-	ir_sensor_right_new = (uint16_t) (6000 / (ir_sensor_right_raw - 6.89)) - 4;
+	ir_sensor_right_new = (uint16_t) (5754.24 / (ir_sensor_right_raw + 11.44)) - 4;
 
 	if(ir_sensor_right_new > 80)
     ir_sensor_right_new = 81;
@@ -38,7 +38,7 @@ void measure_distances()
 
 
   ir_sensor_left_raw = analogRead(IR_SENSOR_LEFT);
-	ir_sensor_left_new = (uint16_t) (6000 / (ir_sensor_left_raw - 6.89)) - 4;
+	ir_sensor_left_new = (uint16_t) (5754.24 / (ir_sensor_left_raw + 11.44)) - 4;
 
 	if(ir_sensor_left_new > 80)
     ir_sensor_left_new = 81;

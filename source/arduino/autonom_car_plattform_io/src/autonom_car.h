@@ -28,10 +28,12 @@
 #define SHARP_RIGHT               5
 #define SHARP_LEFT                6
 
-#define BACKWARD_THRESHOLD        22
+// 
+#define TESTBENCH                 0
+// CONFIGURATION NUMBERS
+#define BACKWARD_THRESHOLD        28
 #define FORWARD_THRESHOLD         35
 
-// CONFIGURATION NUMBERS
 #define FORWARD_MAX_SPEED_THRESHOLD  150
 
 #define MAX_SPEED                 255

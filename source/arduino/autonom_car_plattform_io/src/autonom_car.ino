@@ -92,7 +92,7 @@ void loop()
 
     // Analog Signals -> Front A0, Right A1, Left A2, Batt A3
     // TODO change state to battery output
-    lcd_output(diff_left_right, state, ir_sensor_right, ir_sensor_left, 4);
+    lcd_output(ir_sensor_front, diff_left_right, ir_sensor_right, ir_sensor_left, 4);
 
     // TODO Funktion schreiben
     Serial.print("State: \t"); Serial.print(state); Serial.print("\tBatt: \t"); Serial.print(battery_voltage); Serial.print("\tFront: \t"); Serial.print(ir_sensor_front); Serial.print("\tRight: \t"); Serial.print(ir_sensor_right); Serial.print("\tLeft: \t"); Serial.print(ir_sensor_left); Serial.print("\tDiff: \t"); Serial.println(diff_left_right);
@@ -147,7 +147,7 @@ void loop()
         }
         else if (ir_sensor_front <= FORWARD_MAX_SPEED_THRESHOLD && ir_sensor_front > BACKWARD_THRESHOLD)
         {
-          speed_left = ir_sensor_front * 1.64 + 8.9;  // k, d taken from excel calculation
+          speed_left = ir_sensor_front * 1.72 - 3.2;  // k, d taken from excel calculation y = k*x + d
           speed_right = speed_left;
         }
         else
@@ -157,17 +157,18 @@ void loop()
           state = DRIVE_BACKWARD;
         }
 
-        if (diff_left_right > 1 && diff_left_right <= 10)
+        if (diff_left_right > 1 && diff_left_right <= 20)
         {
-          correction_factor = diff_left_right;
+          correction_factor = 10;
         }
-        /*
         else if (diff_left_right > 20)
         {
-          correction_factor = diff_left_right << 2;
+          speed_left = MID_SPEED;
+          speed_right = MID_SPEED;
+          correction_factor = diff_left_right << 1;
         }
 
-        if (ir_sensor_right > SHARP_TURN_VALUE)
+        /*if (ir_sensor_right > SHARP_TURN_VALUE)
         {
           correction_factor = 200;
         }
@@ -177,7 +178,7 @@ void loop()
         }
 
       */
-
+      
         if (ir_sensor_right > ir_sensor_left)
         {
           speed_right = diff16(speed_right, correction_factor);
@@ -188,6 +189,7 @@ void loop()
           speed_right = add16(speed_right, correction_factor);
           speed_left = diff16(speed_left, correction_factor);
         }
+
 
         //state = LEFT_RIGHT;
         
@@ -293,6 +295,11 @@ void loop()
         break;
     }
 
+    #if TESTBENCH == 1
+      speed_right = 0;
+      speed_left = 0;
+    #endif
+
     analogWrite(MOTOR_RIGHT_SPEED, speed_right);
     analogWrite(MOTOR_LEFT_SPEED, speed_left);
   }
@@ -302,7 +309,7 @@ void loop()
 
 uint8_t add16(uint8_t summand1, uint8_t summand2)
 {
-  int16_t sum = summand1 + summand2;
+  int16_t sum = (int16_t) summand1 + (int16_t) summand2;
 
   if (sum > 255)
   {
@@ -314,7 +321,7 @@ uint8_t add16(uint8_t summand1, uint8_t summand2)
 
 uint8_t diff16(uint8_t minuend, uint8_t subtrahend)
 {
-  int16_t difference = minuend - subtrahend;
+  int16_t difference = (int16_t) minuend - (int16_t) subtrahend;
 
   if (difference < 0)
   {
