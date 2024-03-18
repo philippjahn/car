@@ -56,6 +56,9 @@ void lcd_output(int sensor0, int sensor1, int sensor2, int sensor3, int sensor_c
     else
       digit_offset = 2;
 
+    if (sensor_val [i] < 0)
+      digit_offset--;
+
     switch (i)
     {
       case 0:

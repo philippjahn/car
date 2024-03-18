@@ -95,7 +95,7 @@ void loop()
     lcd_output(ir_sensor_front, diff_left_right, ir_sensor_right, ir_sensor_left, 4);
 
     // TODO Funktion schreiben
-    Serial.print("State: \t"); Serial.print(state); Serial.print("\tBatt: \t"); Serial.print(battery_voltage); Serial.print("\tFront: \t"); Serial.print(ir_sensor_front); Serial.print("\tRight: \t"); Serial.print(ir_sensor_right); Serial.print("\tLeft: \t"); Serial.print(ir_sensor_left); Serial.print("\tDiff: \t"); Serial.println(diff_left_right);
+    //Serial.print("State: \t"); Serial.print(state); Serial.print("\tBatt: \t"); Serial.print(battery_voltage); Serial.print("\tFront: \t"); Serial.print(ir_sensor_front); Serial.print("\tRight: \t"); Serial.print(ir_sensor_right); Serial.print("\tLeft: \t"); Serial.print(ir_sensor_left); Serial.print("\tDiff: \t"); Serial.println(diff_left_right);
   }
 
   // timeslices - to be done every 20ms
@@ -157,16 +157,42 @@ void loop()
           state = DRIVE_BACKWARD;
         }
 
-        if (diff_left_right > 1 && diff_left_right <= 20)
+        #define MIDDLECONTROL_WEIGHTAGE 4
+
+        Serial.print(diff_left_right);
+        Serial.print("\t-> ");
+        Serial.print(speed_left);
+        Serial.print("\t- ");
+        Serial.print(speed_right);
+        Serial.print("\t-> ");
+       
+        if(diff_left_right > 0)
+          speed_left = diff16(speed_left, diff_left_right * MIDDLECONTROL_WEIGHTAGE);
+        else if(diff_left_right < 0)
+          speed_right = diff16(speed_right, (diff_left_right * -1) * MIDDLECONTROL_WEIGHTAGE); // add because it is negative
+        /*else if(diff_left_right > 10)
+          speed_left = diff16(speed_left, 10 * MIDDLECONTROL_WEIGHTAGE);
+        else if(diff_left_right < -10)
+          speed_right = diff16(speed_right, 10 * MIDDLECONTROL_WEIGHTAGE);
+        */
+       
+        Serial.print(speed_left);
+        Serial.print("\t- ");
+        Serial.println(speed_right);
+
+        #define DISTANCE_RIGHT 40
+        #define DISTANCE_LEFT 40
+        #define HYSTERESIS 2
+        #define WEIGHTAGE 16
+
+        /*if (ir_sensor_right > (DISTANCE_RIGHT + HYSTERESIS))
         {
-          correction_factor = 10;
+          speed_right = diff16(speed_right, (ir_sensor_right - DISTANCE_RIGHT) * WEIGHTAGE);
         }
-        else if (diff_left_right > 20)
+        else if (ir_sensor_left > (DISTANCE_LEFT + HYSTERESIS))
         {
-          speed_left = MID_SPEED;
-          speed_right = MID_SPEED;
-          correction_factor = diff_left_right << 1;
-        }
+          speed_left = diff16(speed_left, (ir_sensor_right - DISTANCE_LEFT) * WEIGHTAGE);
+        }*/
 
         /*if (ir_sensor_right > SHARP_TURN_VALUE)
         {
@@ -179,7 +205,7 @@ void loop()
 
       */
       
-        if (ir_sensor_right > ir_sensor_left)
+/*        if (ir_sensor_right > ir_sensor_left)
         {
           speed_right = diff16(speed_right, correction_factor);
           speed_left = add16(speed_left, correction_factor);
@@ -189,7 +215,7 @@ void loop()
           speed_right = add16(speed_right, correction_factor);
           speed_left = diff16(speed_left, correction_factor);
         }
-
+*/
 
         //state = LEFT_RIGHT;
         
@@ -300,6 +326,9 @@ void loop()
       speed_left = 0;
     #endif
 
+    // compensation general right drift TODO: not relevant anymore
+    //speed_left = diff16(speed_left, 25);
+
     analogWrite(MOTOR_RIGHT_SPEED, speed_right);
     analogWrite(MOTOR_LEFT_SPEED, speed_left);
   }
@@ -307,9 +336,9 @@ void loop()
 }
 
 
-uint8_t add16(uint8_t summand1, uint8_t summand2)
+uint8_t add16(uint8_t summand1, int16_t summand2)
 {
-  int16_t sum = (int16_t) summand1 + (int16_t) summand2;
+  int16_t sum = (int16_t) summand1 + summand2;
 
   if (sum > 255)
   {
@@ -319,9 +348,9 @@ uint8_t add16(uint8_t summand1, uint8_t summand2)
   return (uint8_t) sum;
 }
 
-uint8_t diff16(uint8_t minuend, uint8_t subtrahend)
+uint8_t diff16(uint8_t minuend, int16_t subtrahend)
 {
-  int16_t difference = (int16_t) minuend - (int16_t) subtrahend;
+  int16_t difference = (int16_t) minuend - subtrahend;
 
   if (difference < 0)
   {

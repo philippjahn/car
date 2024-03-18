@@ -1,3 +1,6 @@
+uint8_t add16(uint8_t summand1, int16_t summand2);
+uint8_t diff16(uint8_t minuend, int16_t subtrahend);
+
 // General definitions
 #define BAUD                      115200                    // define baud for serial communication
 
@@ -28,7 +31,6 @@
 #define SHARP_RIGHT               5
 #define SHARP_LEFT                6
 
-// 
 #define TESTBENCH                 0
 // CONFIGURATION NUMBERS
 #define BACKWARD_THRESHOLD        28

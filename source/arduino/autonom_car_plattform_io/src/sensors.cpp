@@ -11,7 +11,7 @@ uint16_t ir_sensor_front_last = 70;
 uint16_t ir_sensor_right_last = 30;
 uint16_t ir_sensor_left_last = 30;
   
-uint16_t diff_left_right;
+int16_t diff_left_right;
 
 void measure_distances()
 {
@@ -60,15 +60,8 @@ void measure_distances()
     ir_sensor_left = ir_sensor_left_new;
   #endif
 
-  // calculate difference of left and right
-  if (ir_sensor_right > ir_sensor_left)
-  {
-    diff_left_right = ir_sensor_right - ir_sensor_left;
-  }
-  else
-  {
-    diff_left_right = ir_sensor_left - ir_sensor_right;
-  }
+  // calculate difference of right and left
+  diff_left_right = ir_sensor_left - ir_sensor_right;
 
   // arithmetic mean to compensate wrong measurements and discard complete nonsense measurements
   // (bigger jump than 80% or last three values are not all in a similar range and different from minimum value)
