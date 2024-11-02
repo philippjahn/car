@@ -5,6 +5,7 @@ Hier sollen alle Erkenntnisse und Lernerfolge der Reihe nach dokumentiert werden
 * oder du einfach was Neues gelernt hast
 * oder ...
 * new line
+* neue Zeilee
 
 Für jedes Thema ein eigenes Kapitel dazu erstellen...
 
@@ -14,5 +15,7 @@ Alle Details sind hier schön beschrieben: [Markdown in Github](https://gist.git
 
 Und ganz wichtig - immer Bilder einfügen! Dieses ist designed by [Freepik](www.freepik.com):
 ![Entwickler](./pics/2147883772_freepik.jpg)
+
+Neue Zeile
 
 Ending
