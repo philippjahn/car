@@ -4,7 +4,6 @@ Hier sollen alle Erkenntnisse und Lernerfolge der Reihe nach dokumentiert werden
 * wenn du lange nach einem Fehler gesucht hast und dann endlich die Lösung am Tisch lag
 * oder du einfach was Neues gelernt hast
 * oder ...
-* new line
 * neue Zeilee
 
 Für jedes Thema ein eigenes Kapitel dazu erstellen...
@@ -17,5 +16,3 @@ Und ganz wichtig - immer Bilder einfügen! Dieses ist designed by [Freepik](www.
 ![Entwickler](./pics/2147883772_freepik.jpg)
 
 Neue Zeile
-
-Ending
