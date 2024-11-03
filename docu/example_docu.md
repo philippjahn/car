@@ -36,8 +36,7 @@ Dies resultiert in folgendem Code zur richtigen Kalibrierung des Sensors ...
 	if(ir_sensor_front_new > 150)
 		ir_sensor_front_new = 151;
 	else if(ir_sensor_front_new < 20)
-        ir_sensor_front_new = 19;
-`
+        	ir_sensor_front_new = 19;
 
 ## Fahrstrategie
 
