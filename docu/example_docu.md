@@ -7,8 +7,8 @@ In diesem Projekt beschäftigen wir uns mit der Herangehensweise und den Herausf
 Beim Aufbau müssen das Chassis, Motoren + Reifen, Motortreiber, Arduino inklusive Sensorshield, Sensoren und Stromversorgung entsprechend verkabelt werden.
 
 Hier soll ein Bild eures skizzierter Schaltplans und ein Foto des tatsächlichen Aufbaus hinein:
-[//] ![Bild mit eurer Skizze sowie Foto des Aufbaus](./pics/symbolabbildung-skizze-foto.png)
-<img src="./pics/symbolabbildung-skizze-foto.png" alt="Bild mit eurer Skizze sowie Foto des Aufbaus" width="300"/>
+[comment:] ![Bild mit eurer Skizze sowie Foto des Aufbaus](./pics/symbolabbildung-skizze-foto.png)
+<img src="./pics/symbolabbildung-skizze-foto.png" alt="Bild mit eurer Skizze sowie Foto des Aufbaus" width="500"/>
 
 ## Sensorerfassung
 
