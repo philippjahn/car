@@ -29,14 +29,15 @@ Daraus ergeben sich folgende Parameter ...
 Dies resultiert in folgendem Code zur richtigen Kalibrierung des Sensors ...
 
 ```c
-	// read IR sensor data
-	ir_sensor_front_raw = analogRead(IR_SENSOR_FRONT);
-	ir_sensor_front_new = (uint16_t) (16256.4 / (ir_sensor_front_raw + 22.8)) - 8;
+// read IR sensor data
+ir_sensor_front_raw = analogRead(IR_SENSOR_FRONT);
+ir_sensor_front_new = (uint16_t) (16256.4 / (ir_sensor_front_raw + 22.8)) - 8;
 
-	if(ir_sensor_front_new > 150)
-		ir_sensor_front_new = 151;
-	else if(ir_sensor_front_new < 20)
-        	ir_sensor_front_new = 19;
+if(ir_sensor_front_new > 150)
+	ir_sensor_front_new = 151;
+else if(ir_sensor_front_new < 20)
+       	ir_sensor_front_new = 19;
+
 
 ## Fahrstrategie
 
