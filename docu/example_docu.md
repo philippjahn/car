@@ -7,7 +7,7 @@ In diesem Projekt beschäftigen wir uns mit der Herangehensweise und den Herausf
 Beim Aufbau müssen das Chassis, Motoren + Reifen, Motortreiber, Arduino inklusive Sensorshield, Sensoren und Stromversorgung entsprechend verkabelt werden.
 
 Hier soll ein Bild eures skizzierter Schaltplans und ein Foto des tatsächlichen Aufbaus hinein:
-![Bild mit eurer Skizze sowie Foto des Aufbaus](./pics/symbolabbildung-skizze-foto.jpg)
+![Bild mit eurer Skizze sowie Foto des Aufbaus](./pics/symbolabbildung-skizze-foto.png)
 
 ## Sensorerfassung
 
@@ -37,7 +37,7 @@ if(ir_sensor_front_new > 150)
 	ir_sensor_front_new = 151;
 else if(ir_sensor_front_new < 20)
        	ir_sensor_front_new = 19;
-
+```
 
 ## Fahrstrategie
 
