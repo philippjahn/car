@@ -4,6 +4,8 @@
 
 #define MOTOR_RIGHT_BACKWARD      7
 #define MOTOR_LEFT_BACKWARD       8
+#define MOTOR_RIGHT_FORWARD       4
+#define MOTOR_LEFT_FORWARD        3
 
 void init_motors();
 void stop();
