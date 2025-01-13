@@ -8,8 +8,8 @@ uint8_t diff16(uint8_t minuend, int16_t subtrahend);
 #define DEBUG_LED                 13
 
 #define IR_SENSOR_FRONT           A0
-#define IR_SENSOR_RIGHT           A2
-#define IR_SENSOR_LEFT            A1
+#define IR_SENSOR_RIGHT           A1
+#define IR_SENSOR_LEFT            A2
 
 #define BATTERY_CHECK             A3
 

@@ -6,7 +6,7 @@
  * Version includes:
  * - Some kind of timeslices
  * - stable sensor values
- * -
+ * - 
  * 
  * Todos: 
  * - test algorithm in track
@@ -92,7 +92,7 @@ void loop()
 
     // Analog Signals -> Front A0, Right A1, Left A2, Batt A3
     // TODO change state to battery output
-    lcd_output(ir_sensor_front, diff_left_right, ir_sensor_right, ir_sensor_left, 4);
+    lcd_output(ir_sensor_front, state, ir_sensor_right, ir_sensor_left, 4);
 
     // TODO Funktion schreiben
     //Serial.print("State: \t"); Serial.print(state); Serial.print("\tBatt: \t"); Serial.print(battery_voltage); Serial.print("\tFront: \t"); Serial.print(ir_sensor_front); Serial.print("\tRight: \t"); Serial.print(ir_sensor_right); Serial.print("\tLeft: \t"); Serial.print(ir_sensor_left); Serial.print("\tDiff: \t"); Serial.println(diff_left_right);
@@ -112,6 +112,7 @@ void loop()
       case EMERGENCY_STOP:
         speed_left = STOP_SPEED;
         speed_right = STOP_SPEED;
+
         // only way to start by pressing the start button
         break;
 
@@ -154,7 +155,7 @@ void loop()
         {
           speed_left = STOP_SPEED;
           speed_right = STOP_SPEED;
-          state = DRIVE_BACKWARD;
+        //  state = DRIVE_BACKWARD;
         }
 
         #define MIDDLECONTROL_WEIGHTAGE 4
@@ -184,6 +185,9 @@ void loop()
         #define DISTANCE_LEFT 40
         #define HYSTERESIS 2
         #define WEIGHTAGE 16
+
+        speed_left = MAX_SPEED;
+        speed_right = MAX_SPEED;
 
         /*if (ir_sensor_right > (DISTANCE_RIGHT + HYSTERESIS))
         {
@@ -328,6 +332,11 @@ void loop()
 
     // compensation general right drift TODO: not relevant anymore
     //speed_left = diff16(speed_left, 25);
+
+    Serial.print("Speed_right: ");
+    Serial.print(speed_right);
+    Serial.print("\tSpeed_left: ");
+    Serial.println(speed_left);
 
     analogWrite(MOTOR_RIGHT_SPEED, speed_right);
     analogWrite(MOTOR_LEFT_SPEED, speed_left);
