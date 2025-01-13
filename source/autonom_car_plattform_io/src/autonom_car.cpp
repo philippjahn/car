@@ -59,8 +59,9 @@ void loop()
   float battery_voltage;
   uint8_t correction_factor = 0;
 
-  static uint8_t state_old = EMERGENCY_STOP;
+  static uint8_t state_new = EMERGENCY_STOP;
   static uint8_t state = EMERGENCY_STOP;
+  static uint8_t state_old = EMERGENCY_STOP;
 
   static uint8_t speed_left = 0, speed_right = 0;
 
@@ -73,12 +74,12 @@ void loop()
   // highest priority
   if (digitalRead(BUTTON_BLACK) == LOW)
   {
-    state = STOP;
+    state_new = STOP;
   }
 
   if (digitalRead(BUTTON_RED) == LOW)
   {
-    state = EMERGENCY_STOP;
+    state_new = EMERGENCY_STOP;
   }
 
   // read battery status
@@ -106,6 +107,7 @@ void loop()
     measure_distances();
 
     state_old = state;
+    state = state_new;
 
     switch (state)
     {
@@ -122,24 +124,26 @@ void loop()
 
         if (ir_sensor_front >= FORWARD_THRESHOLD)
         {
-          state = DRIVE_FORWARD;
+          state_new = DRIVE_FORWARD;
         }
         else
         {
-          state = DRIVE_BACKWARD;
+          state_new = DRIVE_BACKWARD;
         }
         break;
 
       case DRIVE_FORWARD:
         if (state_old == DRIVE_BACKWARD)
         {
+          digitalWrite(MOTOR_RIGHT_BACKWARD, LOW);  // stop moving backward
+          digitalWrite(MOTOR_LEFT_BACKWARD, LOW);   // stop moving backward
           analogWrite(MOTOR_RIGHT_SPEED, STOP_SPEED);
           analogWrite(MOTOR_LEFT_SPEED, STOP_SPEED);
           delay(100);   // avoid to fast switching from backward to forward
         }
 
-        digitalWrite(MOTOR_RIGHT_BACKWARD, LOW); // move forward
-        digitalWrite(MOTOR_LEFT_BACKWARD, LOW); // move forward
+        digitalWrite(MOTOR_RIGHT_FORWARD, HIGH); // move forward
+        digitalWrite(MOTOR_LEFT_FORWARD, HIGH);  // move forward
 
         if (ir_sensor_front > FORWARD_MAX_SPEED_THRESHOLD)
         {
@@ -155,7 +159,7 @@ void loop()
         {
           speed_left = STOP_SPEED;
           speed_right = STOP_SPEED;
-        //  state = DRIVE_BACKWARD;
+          state_new = DRIVE_BACKWARD;
         }
 
         #define MIDDLECONTROL_WEIGHTAGE 4
@@ -185,9 +189,6 @@ void loop()
         #define DISTANCE_LEFT 40
         #define HYSTERESIS 2
         #define WEIGHTAGE 16
-
-        speed_left = MAX_SPEED;
-        speed_right = MAX_SPEED;
 
         /*if (ir_sensor_right > (DISTANCE_RIGHT + HYSTERESIS))
         {
@@ -221,17 +222,17 @@ void loop()
         }
 */
 
-        //state = LEFT_RIGHT;
+        //state_new = LEFT_RIGHT;
         
         /*else
         {
           if (ir_sensor_right_last >= SHARP_RIGHT_VALUE && ir_sensor_right > SHARP_RIGHT_VALUE)
           {
-            state = SHARP_RIGHT;
+            state_new = SHARP_RIGHT;
           }
           else if (ir_sensor_left_last >= SHARP_LEFT_VALUE && ir_sensor_left > SHARP_LEFT_VALUE)
           {
-            state = SHARP_LEFT;
+            state_new = SHARP_LEFT;
           }
         }*/
 
@@ -240,13 +241,16 @@ void loop()
       case DRIVE_BACKWARD:
         if (state_old == DRIVE_FORWARD)
         {
+          digitalWrite(MOTOR_RIGHT_FORWARD, LOW); // stop moving forward
+          digitalWrite(MOTOR_LEFT_FORWARD, LOW);  // stop moving forward
           analogWrite(MOTOR_RIGHT_SPEED, STOP_SPEED);
           analogWrite(MOTOR_LEFT_SPEED, STOP_SPEED);
           delay(100);   // avoid to fast switching from forward to backward
         }
 
         digitalWrite(MOTOR_RIGHT_BACKWARD, HIGH); // move backward
-        digitalWrite(MOTOR_LEFT_BACKWARD, HIGH); // move backward
+        digitalWrite(MOTOR_LEFT_BACKWARD, HIGH);  // move backward
+
 
         speed_left = MID_SPEED;
         speed_right = MID_SPEED;
@@ -255,7 +259,7 @@ void loop()
         {
           speed_left = STOP_SPEED;
           speed_right = STOP_SPEED;
-          state = DRIVE_FORWARD;
+          state_new = DRIVE_FORWARD;
         }
 
         break;
@@ -263,12 +267,12 @@ void loop()
       case LEFT_RIGHT:
         if (diff_left_right == 0)
         {
-          state = DRIVE_FORWARD;
+          state_new = DRIVE_FORWARD;
           break; 
         }
         else if (ir_sensor_front <= BACKWARD_THRESHOLD)
         {
-          state = DRIVE_BACKWARD;
+          state_new = DRIVE_BACKWARD;
         }
         else
         {
@@ -299,7 +303,7 @@ void loop()
         if (ir_sensor_front > 120)
         {
           delay_once = 0;
-          state = DRIVE_FORWARD;
+          state_new = DRIVE_FORWARD;
         }
 
         break;
@@ -317,7 +321,7 @@ void loop()
         if (ir_sensor_front > 120 )
         {
           delay_once = 0;
-          state = DRIVE_FORWARD;
+          state_new = DRIVE_FORWARD;
         }
         break;
 
