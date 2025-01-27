@@ -3,13 +3,11 @@ uint8_t diff16(uint8_t minuend, int16_t subtrahend);
 
 // General definitions
 #define BAUD                      115200                    // define baud for serial communication
+#define FALSE                     0
+#define TRUE                      1
 
 // Pin definitions
 #define DEBUG_LED                 13
-
-#define IR_SENSOR_FRONT           A0
-#define IR_SENSOR_RIGHT           A1
-#define IR_SENSOR_LEFT            A2
 
 #define BATTERY_CHECK             A3
 
@@ -46,3 +44,6 @@ uint8_t diff16(uint8_t minuend, int16_t subtrahend);
 #define DRIFT_FACTOR              0   // right shift by x
 
 #define SHARP_TURN_VALUE          75
+
+extern bool drive_left_backward; // input for speed sensors
+extern bool drive_right_backward; // input for speed sensors

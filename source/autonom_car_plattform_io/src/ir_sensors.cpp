@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "autonom_car.h"
-#include "sensors.h"
+#include "ir_sensors.h"
 #include <math.h>
 
 uint16_t ir_sensor_front = 70;
@@ -10,14 +10,14 @@ uint16_t ir_sensor_left = 30;
 uint16_t ir_sensor_front_last = 70;
 uint16_t ir_sensor_right_last = 30;
 uint16_t ir_sensor_left_last = 30;
-  
+
 int16_t diff_left_right;
 
-void measure_distances()
+void measure_ir_distances()
 {
   uint16_t ir_sensor_front_raw, ir_sensor_right_raw, ir_sensor_left_raw;
   uint16_t ir_sensor_front_new, ir_sensor_right_new, ir_sensor_left_new;
-   
+
   // read IR sensor data
   ir_sensor_front_raw = analogRead(IR_SENSOR_FRONT);
 	ir_sensor_front_new = (uint16_t) (16256.4 / (ir_sensor_front_raw + 22.8)) - 8;
@@ -72,4 +72,48 @@ void measure_distances()
   if ((ir_sensor_right_new > (ir_sensor_right * 0.8)) || (ir_sensor_right_new != 9 && (ir_sensor_right_last - ir_sensor_right_new < 15) && (ir_sensor_right_2nd_last - ir_sensor_right_new < 15)));// || (abs(ir_sensor_right_new - ir_sensor_right_last) < 0 && abs(ir_sensor_right_new - ir_sensor_right_2nd_last) < 0))
     ir_sensor_right = (ir_sensor_right + ir_sensor_right_new) / 2;
   */
+}
+
+volatile uint32_t speed_sensor_left_count = 0;
+volatile uint32_t speed_sensor_right_count = 0;
+
+void init_speed_sensors()
+{
+  // initialize speed sensors
+  pinMode(SPEED_SENSOR_LEFT, INPUT_PULLUP);
+  pinMode(SPEED_SENSOR_RIGHT, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(SPEED_SENSOR_LEFT), measure_speed_left, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(SPEED_SENSOR_RIGHT), measure_speed_right, CHANGE);
+}
+
+void measure_speed_left()
+{
+  static bool old_state = 0;
+  bool new_state = digitalRead(SPEED_SENSOR_LEFT);
+  if (new_state != old_state)
+  {
+    Serial.println("left");
+    if (drive_left_backward == FALSE)
+      speed_sensor_left_count++;
+    else
+      speed_sensor_left_count--;
+
+    old_state = new_state;
+  }
+}
+
+void measure_speed_right()
+{
+  static bool old_state = 0;
+  bool new_state = digitalRead(SPEED_SENSOR_RIGHT);
+  if (new_state != old_state)
+  {
+    Serial.println("right");
+    if (drive_right_backward == FALSE)
+      speed_sensor_right_count++;
+    else
+      speed_sensor_right_count--;
+
+    old_state = new_state;
+  }
 }

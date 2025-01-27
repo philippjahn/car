@@ -15,9 +15,12 @@
 
 #include <Arduino.h>
 #include "autonom_car.h"
-#include "sensors.h"
+#include "ir_sensors.h"
 #include "motors.h"
 #include "display.h"
+
+bool drive_left_backward = FALSE; // input for speed sensors
+bool drive_right_backward = FALSE; // input for speed sensors
 
 void init_debug()
 {
@@ -50,6 +53,7 @@ void setup()
   init_safety();
   init_lcd();
   init_uart();
+  init_speed_sensors();
 }
 
 
@@ -104,7 +108,7 @@ void loop()
   {
     previous_millis_20ms = millis();
 
-    measure_distances();
+    measure_ir_distances();
 
     state_old = state;
     state = state_new;
@@ -142,6 +146,9 @@ void loop()
           delay(100);   // avoid to fast switching from backward to forward
         }
 
+        drive_left_backward = FALSE; // input for speed sensors
+        drive_right_backward = FALSE; // input for speed sensors
+        
         digitalWrite(MOTOR_RIGHT_FORWARD, HIGH); // move forward
         digitalWrite(MOTOR_LEFT_FORWARD, HIGH);  // move forward
 
@@ -248,6 +255,9 @@ void loop()
           delay(100);   // avoid to fast switching from forward to backward
         }
 
+        drive_left_backward = TRUE; // input for speed sensors
+        drive_right_backward = TRUE; // input for speed sensors
+
         digitalWrite(MOTOR_RIGHT_BACKWARD, HIGH); // move backward
         digitalWrite(MOTOR_LEFT_BACKWARD, HIGH);  // move backward
 
@@ -337,10 +347,15 @@ void loop()
     // compensation general right drift TODO: not relevant anymore
     //speed_left = diff16(speed_left, 25);
 
-    Serial.print("Speed_right: ");
+/*    Serial.print("Speed_right: ");
     Serial.print(speed_right);
     Serial.print("\tSpeed_left: ");
     Serial.println(speed_left);
+*/
+    Serial.print("Speed_measure right: ");
+    Serial.print(speed_sensor_right_count);
+    Serial.print("\tSpeed_measure left: ");
+    Serial.println(speed_sensor_left_count);
 
     analogWrite(MOTOR_RIGHT_SPEED, speed_right);
     analogWrite(MOTOR_LEFT_SPEED, speed_left);
