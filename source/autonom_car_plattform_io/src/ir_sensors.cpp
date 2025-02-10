@@ -92,7 +92,6 @@ void measure_speed_left()
   bool new_state = digitalRead(SPEED_SENSOR_LEFT);
   if (new_state != old_state)
   {
-    Serial.println("left");
     if (drive_left_backward == FALSE)
       speed_sensor_left_count++;
     else
@@ -108,7 +107,6 @@ void measure_speed_right()
   bool new_state = digitalRead(SPEED_SENSOR_RIGHT);
   if (new_state != old_state)
   {
-    Serial.println("right");
     if (drive_right_backward == FALSE)
       speed_sensor_right_count++;
     else
