@@ -13,6 +13,9 @@ uint16_t ir_sensor_left_last = 30;
 
 int16_t diff_left_right;
 
+volatile int32_t speed_sensor_left_count = 0;
+volatile int32_t speed_sensor_right_count = 0;
+
 void measure_ir_distances()
 {
   uint16_t ir_sensor_front_raw, ir_sensor_right_raw, ir_sensor_left_raw;
@@ -63,7 +66,7 @@ void measure_ir_distances()
   // calculate difference of right and left
   diff_left_right = ir_sensor_left - ir_sensor_right;
 
-  // arithmetic mean to compensate wrong measurements and discard complete nonsense measurements
+  // arithmetic mean to compensate wrong measurements and discard complete nonsense measurements - not required anymore was due to software error (integer overflows)
   // (bigger jump than 80% or last three values are not all in a similar range and different from minimum value)
   /*if ((ir_sensor_front_new > (ir_sensor_front * 0.8)) || (ir_sensor_front_new != 19 && (ir_sensor_front_last - ir_sensor_front_new < 15) && (ir_sensor_front_2nd_last - ir_sensor_front_new < 15)));// || (abs(ir_sensor_front_new - ir_sensor_front_last) < 0 && abs(ir_sensor_front_new - ir_sensor_front_2nd_last) < 0))
     ir_sensor_front = (ir_sensor_front + ir_sensor_front_new) / 2;
@@ -74,8 +77,6 @@ void measure_ir_distances()
   */
 }
 
-volatile uint32_t speed_sensor_left_count = 0;
-volatile uint32_t speed_sensor_right_count = 0;
 
 void init_speed_sensors()
 {
@@ -114,4 +115,11 @@ void measure_speed_right()
 
     old_state = new_state;
   }
+}
+
+
+void reset_speed_sensors()
+{
+  speed_sensor_left_count = 0;
+  speed_sensor_right_count = 0;
 }

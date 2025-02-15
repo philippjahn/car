@@ -1,12 +1,12 @@
 /**
  * Autonom Driving Car - Crazy Car
  * Algorithm to navigate through the race track as fast as possible
- * (C) Philipp Jahn
+ * (C) 2025 Philipp Jahn
  * 
  * Version includes:
  * - Some kind of timeslices
  * - stable sensor values
- * - 
+ * - speed sensors
  * 
  * Todos: 
  * - test algorithm in track
@@ -41,7 +41,7 @@ void init_safety()
 void init_uart()
 {
   // initialize UART Interface
-  Serial.begin(115200);
+  Serial.begin(BAUD);
   Serial.println("Serial started...");
 }
 
@@ -61,7 +61,6 @@ void loop()
 {
   uint16_t battery_measurement;
   float battery_voltage;
-  uint8_t correction_factor = 0;
 
   static uint8_t state_new = EMERGENCY_STOP;
   static uint8_t state = EMERGENCY_STOP;
@@ -88,7 +87,7 @@ void loop()
 
   // read battery status
   battery_measurement = analogRead(A3);
-  battery_voltage = (float) battery_measurement * 3.1364 * 0.004883 * 10; // Voltage divided by 690/220 and 1024 = 5V and times 10 to get one decimal place
+  battery_voltage = (float) battery_measurement * 3.1364 * 0.004883 * 10; // Voltage divided by 690/220 and 1024 = 5V and times 10 to get one decimal digit
 
   // timeslices - to be done every 250ms
   if (millis() - previous_millis_250ms >= 100)
@@ -143,7 +142,7 @@ void loop()
           digitalWrite(MOTOR_LEFT_BACKWARD, LOW);   // stop moving backward
           analogWrite(MOTOR_RIGHT_SPEED, STOP_SPEED);
           analogWrite(MOTOR_LEFT_SPEED, STOP_SPEED);
-          delay(100);   // avoid to fast switching from backward to forward
+          delay(300);   // avoid too fast switching from backward to forward
         }
 
         drive_left_backward = FALSE; // input for speed sensors
@@ -169,79 +168,28 @@ void loop()
           state_new = DRIVE_BACKWARD;
         }
 
-        #define MIDDLECONTROL_WEIGHTAGE 4
+        #if STRATEGY == 0 // MIDDLECONTROL
+          if(diff_left_right > 0)
+            speed_left = diff16(speed_left, diff_left_right * MIDDLECONTROL_FACTOR);
+          else if(diff_left_right < 0)
+            speed_right = diff16(speed_right, (diff_left_right * -1) * MIDDLECONTROL_FACTOR); // add because it is negative TODO
+        #elif STRATEGY == 1 // SIDECONTROL RIGHT
+          if(ir_sensor_right > SIDE_DISTANCE)
+            speed_right = diff16(speed_right, (ir_sensor_right - SIDE_DISTANCE)) * SIDECONTROL_FACTOR;
+        #elif STRATEGY == 2 // SIDECONTROL LEFT
+          if(ir_sensor_left > SIDE_DISTANCE)
+            speed_left = diff16(speed_left, (ir_sensor_left - SIDE_DISTANCE)) * SIDECONTROL_FACTOR;
+        #endif
 
-        Serial.print(diff_left_right);
-        Serial.print("\t-> ");
-        Serial.print(speed_left);
-        Serial.print("\t- ");
-        Serial.print(speed_right);
-        Serial.print("\t-> ");
-       
-        if(diff_left_right > 0)
-          speed_left = diff16(speed_left, diff_left_right * MIDDLECONTROL_WEIGHTAGE);
-        else if(diff_left_right < 0)
-          speed_right = diff16(speed_right, (diff_left_right * -1) * MIDDLECONTROL_WEIGHTAGE); // add because it is negative
-        /*else if(diff_left_right > 10)
-          speed_left = diff16(speed_left, 10 * MIDDLECONTROL_WEIGHTAGE);
-        else if(diff_left_right < -10)
-          speed_right = diff16(speed_right, 10 * MIDDLECONTROL_WEIGHTAGE);
-        */
-       
-        Serial.print(speed_left);
-        Serial.print("\t- ");
-        Serial.println(speed_right);
-
-        #define DISTANCE_RIGHT 40
-        #define DISTANCE_LEFT 40
-        #define HYSTERESIS 2
-        #define WEIGHTAGE 16
-
-        /*if (ir_sensor_right > (DISTANCE_RIGHT + HYSTERESIS))
+        // TODO calcualate before? 
+        if (ir_sensor_right_last >= SHARP_TURN_VALUE && ir_sensor_right > SHARP_TURN_VALUE)
         {
-          speed_right = diff16(speed_right, (ir_sensor_right - DISTANCE_RIGHT) * WEIGHTAGE);
+          state_new = SHARP_RIGHT;
         }
-        else if (ir_sensor_left > (DISTANCE_LEFT + HYSTERESIS))
+        else if (ir_sensor_left_last >= SHARP_TURN_VALUE && ir_sensor_left > SHARP_TURN_VALUE)
         {
-          speed_left = diff16(speed_left, (ir_sensor_right - DISTANCE_LEFT) * WEIGHTAGE);
-        }*/
-
-        /*if (ir_sensor_right > SHARP_TURN_VALUE)
-        {
-          correction_factor = 200;
+          state_new = SHARP_LEFT;
         }
-        else if (ir_sensor_left > SHARP_TURN_VALUE)
-        {
-          correction_factor = 200;
-        }
-
-      */
-      
-/*        if (ir_sensor_right > ir_sensor_left)
-        {
-          speed_right = diff16(speed_right, correction_factor);
-          speed_left = add16(speed_left, correction_factor);
-        }
-        else if (ir_sensor_left > ir_sensor_right)
-        {
-          speed_right = add16(speed_right, correction_factor);
-          speed_left = diff16(speed_left, correction_factor);
-        }
-*/
-
-        //state_new = LEFT_RIGHT;
-        
-        /*else
-        {
-          if (ir_sensor_right_last >= SHARP_RIGHT_VALUE && ir_sensor_right > SHARP_RIGHT_VALUE)
-          {
-            state_new = SHARP_RIGHT;
-          }
-          else if (ir_sensor_left_last >= SHARP_LEFT_VALUE && ir_sensor_left > SHARP_LEFT_VALUE)
-          {
-            state_new = SHARP_LEFT;
-          }
-        }*/
 
         break;
 
@@ -252,7 +200,7 @@ void loop()
           digitalWrite(MOTOR_LEFT_FORWARD, LOW);  // stop moving forward
           analogWrite(MOTOR_RIGHT_SPEED, STOP_SPEED);
           analogWrite(MOTOR_LEFT_SPEED, STOP_SPEED);
-          delay(100);   // avoid to fast switching from forward to backward
+          delay(300);   // avoid to fast switching from forward to backward
         }
 
         drive_left_backward = TRUE; // input for speed sensors
@@ -261,41 +209,11 @@ void loop()
         digitalWrite(MOTOR_RIGHT_BACKWARD, HIGH); // move backward
         digitalWrite(MOTOR_LEFT_BACKWARD, HIGH);  // move backward
 
-
-        speed_left = MID_SPEED;
-        speed_right = MID_SPEED;
-
         if (ir_sensor_front >= FORWARD_THRESHOLD)
         {
           speed_left = STOP_SPEED;
           speed_right = STOP_SPEED;
           state_new = DRIVE_FORWARD;
-        }
-
-        break;
-
-      case LEFT_RIGHT:
-        if (diff_left_right == 0)
-        {
-          state_new = DRIVE_FORWARD;
-          break; 
-        }
-        else if (ir_sensor_front <= BACKWARD_THRESHOLD)
-        {
-          state_new = DRIVE_BACKWARD;
-        }
-        else
-        {
-          if (ir_sensor_right > ir_sensor_left)
-          {
-            speed_right = MAX_SPEED + (diff_left_right *3);
-            speed_left = LOW_SPEED;
-          }
-          else if (ir_sensor_left  > ir_sensor_right)
-          {
-            speed_right = LOW_SPEED;
-            speed_left = MAX_SPEED + (diff_left_right *3);
-          }
         }
 
         break;
@@ -344,18 +262,20 @@ void loop()
       speed_left = 0;
     #endif
 
-    // compensation general right drift TODO: not relevant anymore
-    //speed_left = diff16(speed_left, 25);
+    #if DEBUG == 1
+      Serial.print(diff_left_right);
+      Serial.print("\t-> ");
+      Serial.print(speed_left);
+      Serial.print("\t- ");
+      Serial.print(speed_right);
+      Serial.print("\t-> ");
+    
 
-/*    Serial.print("Speed_right: ");
-    Serial.print(speed_right);
-    Serial.print("\tSpeed_left: ");
-    Serial.println(speed_left);
-*/
-    Serial.print("Speed_measure right: ");
-    Serial.print(speed_sensor_right_count);
-    Serial.print("\tSpeed_measure left: ");
-    Serial.println(speed_sensor_left_count);
+      Serial.print("Speed_measure right: ");
+      Serial.print(speed_sensor_right_count);
+      Serial.print("\tSpeed_measure left: ");
+      Serial.println(speed_sensor_left_count);
+    #endif
 
     analogWrite(MOTOR_RIGHT_SPEED, speed_right);
     analogWrite(MOTOR_LEFT_SPEED, speed_left);

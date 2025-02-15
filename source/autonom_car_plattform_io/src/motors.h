@@ -9,4 +9,3 @@
 
 void init_motors();
 void stop();
-void move(uint8_t direction, uint8_t steering, uint8_t speed, uint8_t drift);

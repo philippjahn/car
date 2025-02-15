@@ -16,11 +16,12 @@ void init_motors()
 
 void stop()
 {
-  move(0, 0, 0, 0);
+  analogWrite(MOTOR_RIGHT_SPEED, STOP_SPEED);
+  analogWrite(MOTOR_LEFT_SPEED, STOP_SPEED);
   return;
 }
 
-void move(uint8_t direction, uint8_t steering, uint8_t speed, uint8_t drift)
+/*void move(uint8_t direction, uint8_t steering, uint8_t speed, uint8_t drift)
 {
 
   if (direction == FORWARD) // forward
@@ -84,4 +85,4 @@ void move(uint8_t direction, uint8_t steering, uint8_t speed, uint8_t drift)
   }
 
   return;
-}
+}*/
