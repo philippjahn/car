@@ -151,45 +151,55 @@ void loop()
         digitalWrite(MOTOR_RIGHT_FORWARD, HIGH); // move forward
         digitalWrite(MOTOR_LEFT_FORWARD, HIGH);  // move forward
 
-        if (ir_sensor_front > FORWARD_MAX_SPEED_THRESHOLD)
-        {
-          speed_left = MAX_SPEED;
-          speed_right = speed_left;
-        }
-        else if (ir_sensor_front <= FORWARD_MAX_SPEED_THRESHOLD && ir_sensor_front > BACKWARD_THRESHOLD)
-        {
-          speed_left = ir_sensor_front * 1.72 - 3.2;  // k, d taken from excel calculation y = k*x + d
-          speed_right = speed_left;
-        }
-        else
-        {
-          speed_left = STOP_SPEED;
-          speed_right = STOP_SPEED;
-          state_new = DRIVE_BACKWARD;
-        }
-
         #if STRATEGY == 0 // MIDDLECONTROL
+          if (ir_sensor_front > FORWARD_MAX_SPEED_THRESHOLD)
+          {
+            speed_left = MAX_SPEED;
+            speed_right = speed_left;
+          }
+          else if (ir_sensor_front <= FORWARD_MAX_SPEED_THRESHOLD && ir_sensor_front > BACKWARD_THRESHOLD)
+          {
+            speed_left = ir_sensor_front * 1.72 - 3.2;  // k, d taken from excel calculation y = k*x + d
+            speed_right = speed_left;
+          }
+          else
+          {
+            speed_left = STOP_SPEED;
+            speed_right = STOP_SPEED;
+            state_new = DRIVE_BACKWARD;
+          }
+        
           if(diff_left_right > 0)
             speed_left = diff16(speed_left, diff_left_right * MIDDLECONTROL_FACTOR);
           else if(diff_left_right < 0)
             speed_right = diff16(speed_right, (diff_left_right * -1) * MIDDLECONTROL_FACTOR); // add because it is negative TODO
         #elif STRATEGY == 1 // SIDECONTROL RIGHT
-          if(ir_sensor_right > SIDE_DISTANCE)
+          speed_left = MID_SPEED;
+          speed_right = speed_left;
+        
+          if(ir_sensor_right < SIDE_DISTANCE)
+          {
+            speed_left = diff16(speed_left, (SIDE_DISTANCE - ir_sensor_right)) * SIDECONTROL_FACTOR;
+            speed_right = add16(speed_right, (SIDE_DISTANCE - ir_sensor_right)) * SIDECONTROL_FACTOR;
+          }
+          else if(ir_sensor_right > SIDE_DISTANCE)
+          {
             speed_right = diff16(speed_right, (ir_sensor_right - SIDE_DISTANCE)) * SIDECONTROL_FACTOR;
+          }
         #elif STRATEGY == 2 // SIDECONTROL LEFT
           if(ir_sensor_left > SIDE_DISTANCE)
             speed_left = diff16(speed_left, (ir_sensor_left - SIDE_DISTANCE)) * SIDECONTROL_FACTOR;
         #endif
 
         // TODO calcualate before? 
-        if (ir_sensor_right_last >= SHARP_TURN_VALUE && ir_sensor_right > SHARP_TURN_VALUE)
+        /*if (ir_sensor_right_last >= SHARP_TURN_VALUE && ir_sensor_right > SHARP_TURN_VALUE)
         {
           state_new = SHARP_RIGHT;
         }
         else if (ir_sensor_left_last >= SHARP_TURN_VALUE && ir_sensor_left > SHARP_TURN_VALUE)
         {
           state_new = SHARP_LEFT;
-        }
+        }*/
 
         break;
 
@@ -208,6 +218,9 @@ void loop()
 
         digitalWrite(MOTOR_RIGHT_BACKWARD, HIGH); // move backward
         digitalWrite(MOTOR_LEFT_BACKWARD, HIGH);  // move backward
+
+        speed_left = MID_SPEED;
+        speed_right = speed_left;
 
         if (ir_sensor_front >= FORWARD_THRESHOLD)
         {
@@ -257,11 +270,6 @@ void loop()
         break;
     }
 
-    #if TESTBENCH == 1
-      speed_right = 0;
-      speed_left = 0;
-    #endif
-
     #if DEBUG == 1
       Serial.print(diff_left_right);
       Serial.print("\t-> ");
@@ -275,6 +283,11 @@ void loop()
       Serial.print(speed_sensor_right_count);
       Serial.print("\tSpeed_measure left: ");
       Serial.println(speed_sensor_left_count);
+    #endif
+
+    #if TESTBENCH == 1
+      speed_right = 0;
+      speed_left = 0;
     #endif
 
     analogWrite(MOTOR_RIGHT_SPEED, speed_right);

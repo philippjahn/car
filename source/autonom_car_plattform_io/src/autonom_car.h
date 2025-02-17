@@ -23,8 +23,8 @@
 #define STOP                      1
 #define DRIVE_FORWARD             2
 #define DRIVE_BACKWARD            3
-#define SHARP_RIGHT               5
-#define SHARP_LEFT                6
+#define SHARP_RIGHT               4
+#define SHARP_LEFT                5
 
 // CONFIGURATION NUMBERS
 #define BACKWARD_THRESHOLD        28
@@ -33,14 +33,15 @@
 #define FORWARD_MAX_SPEED_THRESHOLD  150
 
 #define MAX_SPEED                 255
-#define MID_SPEED                 80  // speed where auto starts moving without help
-#define LOW_SPEED                 45  // speed where auto does not move anymore even with help
+#define MID_SPEED                 170  // speed where auto starts moving without help
+#define LOW_SPEED                 90   // speed where auto does not move anymore even with help
+#define START_SPEED               80   // speed where auto starts moving without help
 #define STOP_SPEED                0
 
-#define STRATEGY                  0   // MIDDLECONTROL = 0; SIDECONTROL RIGHT = 1, SIDECONTROL LEFT = 2
-#define SIDE_DISTANCE             15  // distance to the side where the car should drive
-#define MIDDLECONTROL_FACTOR      4   // correction factor for middlecontrol in steering calculation
-#define SIDECONTROL_FACTOR        2   // correction factor for sidecontrol in steering calculation
+#define STRATEGY                  1    // MIDDLECONTROL = 0; SIDECONTROL RIGHT = 1, SIDECONTROL LEFT = 2
+#define SIDE_DISTANCE             25   // distance to the side where the car should drive
+#define MIDDLECONTROL_FACTOR      4    // correction factor for middlecontrol in steering calculation (4 smooth correction ... )
+#define SIDECONTROL_FACTOR        8    // correction factor for sidecontrol in steering calculation (1 smooth correction till 4 extrem correction)
 
 #define SHARP_TURN_VALUE          75
 
