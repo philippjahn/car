@@ -174,18 +174,40 @@ void loop()
           else if(diff_left_right < 0)
             speed_right = diff16(speed_right, (diff_left_right * -1) * MIDDLECONTROL_FACTOR); // add because it is negative TODO
         #elif STRATEGY == 1 // SIDECONTROL RIGHT
-          speed_left = MID_SPEED;
-          speed_right = speed_left;
+          if ((ir_sensor_front < 95 && diff_left_right > 0))
+          {
+            state_new = SHARP_LEFT;
+          }
+          else if ((ir_sensor_front < 95 && diff_left_right < 0))
+          {
+            state_new = SHARP_RIGHT;
+          }
+          if (ir_sensor_front > FORWARD_MAX_SPEED_THRESHOLD)
+          {
+            speed_left = MAX_SPEED;
+            speed_right = speed_left;
+          }
+          else if (ir_sensor_front <= FORWARD_MAX_SPEED_THRESHOLD && ir_sensor_front > BACKWARD_THRESHOLD)
+          {
+            speed_left = ir_sensor_front * SPEED_CONTROL_K + SPEED_CONTROL_D;  // k, d taken from excel calculation y = k*x + d
+            speed_right = speed_left;
+          }
+          else
+          {
+            speed_left = STOP_SPEED;
+            speed_right = STOP_SPEED;
+            state_new = DRIVE_BACKWARD;
+          }
         
           if(ir_sensor_right < SIDE_DISTANCE)
           {
-            speed_left = 0;
+            speed_left = speed_left * SIDECONTROL_FACTOR;
             /*speed_left = diff16(speed_left, (SIDE_DISTANCE - ir_sensor_right)) * SIDECONTROL_FACTOR;
             speed_right = add16(speed_right, (SIDE_DISTANCE - ir_sensor_right)) * SIDECONTROL_FACTOR;*/
           }
           else if(ir_sensor_right > SIDE_DISTANCE)
           {
-            speed_right = 0;
+            speed_right = speed_right * SIDECONTROL_FACTOR;
             //speed_right = diff16(speed_right, (ir_sensor_right - SIDE_DISTANCE)) * SIDECONTROL_FACTOR;
           }
         #elif STRATEGY == 2 // SIDECONTROL LEFT
@@ -206,7 +228,7 @@ void loop()
         break;
 
       case DRIVE_BACKWARD:
-        if (state_old == DRIVE_FORWARD)
+        if (state_old != DRIVE_BACKWARD)
         {
           digitalWrite(MOTOR_RIGHT_FORWARD, LOW); // stop moving forward
           digitalWrite(MOTOR_LEFT_FORWARD, LOW);  // stop moving forward
@@ -234,12 +256,12 @@ void loop()
         break;
 
       case SHARP_RIGHT:
-        speed_left = 255;
+        speed_left = MAX_SPEED;
         speed_right = LOW_SPEED;
-
+        
         if(delay_once == 0)
         {
-          delay(200);
+          //delay(200);
           delay_once = 1;
         }
 
@@ -248,16 +270,22 @@ void loop()
           delay_once = 0;
           state_new = DRIVE_FORWARD;
         }
+        else if (ir_sensor_front < BACKWARD_THRESHOLD)
+        {
+          speed_left = STOP_SPEED;
+          speed_right = STOP_SPEED;
+          state_new = DRIVE_BACKWARD;
+        }
 
         break;
 
       case SHARP_LEFT:
         speed_left = LOW_SPEED;
-        speed_right = 255;
-
+        speed_right = MAX_SPEED;
+        
         if(delay_once == 0)
         {
-          delay(200);
+          //delay(200);
           delay_once = 1;
         }
 
@@ -266,6 +294,13 @@ void loop()
           delay_once = 0;
           state_new = DRIVE_FORWARD;
         }
+        else if (ir_sensor_front < BACKWARD_THRESHOLD)
+        {
+          speed_left = STOP_SPEED;
+          speed_right = STOP_SPEED;
+          state_new = DRIVE_BACKWARD;
+        }
+
         break;
 
       default:
