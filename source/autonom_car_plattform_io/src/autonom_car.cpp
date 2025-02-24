@@ -180,14 +180,14 @@ void loop()
           else if(diff_left_right < 0)
             speed_right = diff16(speed_right, (diff_left_right * -1) * MIDDLECONTROL_FACTOR); // add because it is negative TODO
         #elif STRATEGY == 1 // SIDECONTROL RIGHT
-          /*if ((ir_sensor_front < 95 && diff_left_right > 0))
+          if ((ir_sensor_front < 95 && diff_left_right > 0))
           {
             state_new = SHARP_LEFT;
           }
           else if ((ir_sensor_front < 95 && diff_left_right < 0))
           {
             state_new = SHARP_RIGHT;
-          }*/
+          }
           if (ir_sensor_front > FORWARD_MAX_SPEED_THRESHOLD)
           {
             speed_left = MAX_SPEED;
@@ -204,13 +204,13 @@ void loop()
             speed_right = STOP_SPEED;
             state_new = DRIVE_BACKWARD;
           }
-          speed_left = MID_SPEED;
-          speed_right = MID_SPEED;
+          speed_left = 210;
+          speed_right = 210;
         
           if(ir_sensor_right < SIDE_DISTANCE)
           {
             speed_left = speed_left * SIDECONTROL_FACTOR;
-            if (ir_sensor_front < 65)
+            if (ir_sensor_front < 90)
               speed_left = 0;
             /*speed_left = diff16(speed_left, (SIDE_DISTANCE - ir_sensor_right)) * SIDECONTROL_FACTOR;
             speed_right = add16(speed_right, (SIDE_DISTANCE - ir_sensor_right)) * SIDECONTROL_FACTOR;*/
@@ -218,7 +218,7 @@ void loop()
           else if(ir_sensor_right > SIDE_DISTANCE)
           {
             speed_right = speed_right * SIDECONTROL_FACTOR;
-            if (ir_sensor_front < 65)
+            if (ir_sensor_front < 90)
               speed_right = 0;
             //speed_right = diff16(speed_right, (ir_sensor_right - SIDE_DISTANCE)) * SIDECONTROL_FACTOR;
           }

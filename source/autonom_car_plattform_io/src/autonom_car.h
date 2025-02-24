@@ -45,7 +45,7 @@
 #define STRATEGY                  1    // MIDDLECONTROL = 0; SIDECONTROL RIGHT = 1, SIDECONTROL LEFT = 2
 #define MIDDLECONTROL_FACTOR      4    // correction factor for middlecontrol in steering calculation (4 smooth correction ... )
 #define SIDE_DISTANCE             30   // distance to the side where the car should drive
-#define SIDECONTROL_FACTOR        0.3  // correction factor for sidecontrol in steering calculation (percentage)
+#define SIDECONTROL_FACTOR        0.4  // correction factor for sidecontrol in steering calculation (percentage)
 
 #define SHARP_TURN_VALUE          75
 
