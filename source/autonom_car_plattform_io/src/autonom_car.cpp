@@ -73,6 +73,8 @@ void loop()
   static unsigned long previous_millis_20ms;
 
   static uint8_t delay_once = 0;
+  static uint8_t count_state_left = 0;
+  static uint8_t count_state_right = 0;
 
   // highest priority
   if (digitalRead(BUTTON_BLACK) == LOW)
@@ -97,6 +99,10 @@ void loop()
     // Analog Signals -> Front A0, Right A1, Left A2, Batt A3
     // TODO change state to battery output
     lcd_output(ir_sensor_front, state, ir_sensor_right, ir_sensor_left, 4);
+
+    Serial.print(count_state_left);
+    Serial.print("\t-> ");
+    Serial.println(count_state_right);
 
     // TODO Funktion schreiben
     //Serial.print("State: \t"); Serial.print(state); Serial.print("\tBatt: \t"); Serial.print(battery_voltage); Serial.print("\tFront: \t"); Serial.print(ir_sensor_front); Serial.print("\tRight: \t"); Serial.print(ir_sensor_right); Serial.print("\tLeft: \t"); Serial.print(ir_sensor_left); Serial.print("\tDiff: \t"); Serial.println(diff_left_right);
@@ -174,14 +180,14 @@ void loop()
           else if(diff_left_right < 0)
             speed_right = diff16(speed_right, (diff_left_right * -1) * MIDDLECONTROL_FACTOR); // add because it is negative TODO
         #elif STRATEGY == 1 // SIDECONTROL RIGHT
-          if ((ir_sensor_front < 95 && diff_left_right > 0))
+          /*if ((ir_sensor_front < 95 && diff_left_right > 0))
           {
             state_new = SHARP_LEFT;
           }
           else if ((ir_sensor_front < 95 && diff_left_right < 0))
           {
             state_new = SHARP_RIGHT;
-          }
+          }*/
           if (ir_sensor_front > FORWARD_MAX_SPEED_THRESHOLD)
           {
             speed_left = MAX_SPEED;
@@ -198,6 +204,8 @@ void loop()
             speed_right = STOP_SPEED;
             state_new = DRIVE_BACKWARD;
           }
+          speed_left = MID_SPEED;
+          speed_right = MID_SPEED;
         
           if(ir_sensor_right < SIDE_DISTANCE)
           {
@@ -255,10 +263,13 @@ void loop()
 
         break;
 
-      case SHARP_RIGHT:
-        speed_left = MAX_SPEED;
-        speed_right = LOW_SPEED;
-        
+        case SHARP_LEFT:
+        if (state_old != SHARP_LEFT)
+          count_state_left++;
+
+        speed_left = MIN_SPEED;
+        speed_right = MAX_SPEED;
+
         if(delay_once == 0)
         {
           //delay(200);
@@ -272,6 +283,7 @@ void loop()
         }
         else if (ir_sensor_front < BACKWARD_THRESHOLD)
         {
+          delay_once = 0;
           speed_left = STOP_SPEED;
           speed_right = STOP_SPEED;
           state_new = DRIVE_BACKWARD;
@@ -279,23 +291,27 @@ void loop()
 
         break;
 
-      case SHARP_LEFT:
-        speed_left = LOW_SPEED;
-        speed_right = MAX_SPEED;
-        
+      case SHARP_RIGHT:
+        if(state_old != SHARP_RIGHT)
+          count_state_right++;
+
+        speed_left = MAX_SPEED;
+        speed_right = MIN_SPEED;
+
         if(delay_once == 0)
         {
           //delay(200);
           delay_once = 1;
         }
 
-        if (ir_sensor_front > 120 )
+        if (ir_sensor_front > 120)
         {
           delay_once = 0;
           state_new = DRIVE_FORWARD;
         }
         else if (ir_sensor_front < BACKWARD_THRESHOLD)
         {
+          delay_once = 0;
           speed_left = STOP_SPEED;
           speed_right = STOP_SPEED;
           state_new = DRIVE_BACKWARD;
@@ -306,20 +322,24 @@ void loop()
       default:
         break;
     }
-
+    
     #if DEBUG == 1
-      Serial.print(diff_left_right);
+    /*  Serial.print(diff_left_right);
       Serial.print("\t-> ");
       Serial.print(speed_left);
       Serial.print("\t- ");
       Serial.print(speed_right);
+      Serial.print("\t->>>> ");
+      Serial.print(count_state_left);
+      Serial.print("\t-> ");
+      Serial.print(count_state_right);
       Serial.print("\t-> ");
     
 
       Serial.print("Speed_measure right: ");
       Serial.print(speed_sensor_right_count);
       Serial.print("\tSpeed_measure left: ");
-      Serial.println(speed_sensor_left_count);
+      Serial.println(speed_sensor_left_count);*/
     #endif
 
     #if TESTBENCH == 1
