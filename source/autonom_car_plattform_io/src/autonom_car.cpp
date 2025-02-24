@@ -210,12 +210,16 @@ void loop()
           if(ir_sensor_right < SIDE_DISTANCE)
           {
             speed_left = speed_left * SIDECONTROL_FACTOR;
+            if (ir_sensor_front < 65)
+              speed_left = 0;
             /*speed_left = diff16(speed_left, (SIDE_DISTANCE - ir_sensor_right)) * SIDECONTROL_FACTOR;
             speed_right = add16(speed_right, (SIDE_DISTANCE - ir_sensor_right)) * SIDECONTROL_FACTOR;*/
           }
           else if(ir_sensor_right > SIDE_DISTANCE)
           {
             speed_right = speed_right * SIDECONTROL_FACTOR;
+            if (ir_sensor_front < 65)
+              speed_right = 0;
             //speed_right = diff16(speed_right, (ir_sensor_right - SIDE_DISTANCE)) * SIDECONTROL_FACTOR;
           }
         #elif STRATEGY == 2 // SIDECONTROL LEFT
