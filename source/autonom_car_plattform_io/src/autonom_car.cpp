@@ -204,8 +204,9 @@ void loop()
             speed_right = STOP_SPEED;
             state_new = DRIVE_BACKWARD;
           }
-          speed_left = 210;
-          speed_right = 210;
+          // TODO in case of error try fixed speed
+          /*speed_left = 210;
+          speed_right = 210;*/
         
           if(ir_sensor_right < SIDE_DISTANCE)
           {
