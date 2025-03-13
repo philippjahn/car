@@ -180,13 +180,13 @@ void loop()
           else if(diff_left_right < 0)
             speed_right = diff16(speed_right, (diff_left_right * -1) * MIDDLECONTROL_FACTOR); // add because it is negative TODO
         #elif STRATEGY == 1 // SIDECONTROL RIGHT
-          if ((ir_sensor_front < 95 && diff_left_right > 0))
-          {
-            state_new = SHARP_LEFT;
-          }
-          else if ((ir_sensor_front < 95 && diff_left_right < 0))
+          if ((ir_sensor_front < 95 && diff_left_right < 0))
           {
             state_new = SHARP_RIGHT;
+          }
+          else if ((ir_sensor_front < 95 && diff_left_right > 0))
+          {
+            state_new = SHARP_LEFT;
           }
           if (ir_sensor_front > FORWARD_MAX_SPEED_THRESHOLD)
           {
@@ -208,20 +208,20 @@ void loop()
           /*speed_left = 210;
           speed_right = 210;*/
         
-          if(ir_sensor_right < SIDE_DISTANCE)
+          if(ir_sensor_right > SIDE_DISTANCE)
+          {
+            speed_right = speed_right * SIDECONTROL_FACTOR;
+            if (ir_sensor_front < 90 || ir_sensor_right >= 80)
+              speed_right = 0;
+            //speed_right = diff16(speed_right, (ir_sensor_right - SIDE_DISTANCE)) * SIDECONTROL_FACTOR;
+          }
+          else if(ir_sensor_right < SIDE_DISTANCE)
           {
             speed_left = speed_left * SIDECONTROL_FACTOR;
             if (ir_sensor_front < 90)
               speed_left = 0;
             /*speed_left = diff16(speed_left, (SIDE_DISTANCE - ir_sensor_right)) * SIDECONTROL_FACTOR;
             speed_right = add16(speed_right, (SIDE_DISTANCE - ir_sensor_right)) * SIDECONTROL_FACTOR;*/
-          }
-          else if(ir_sensor_right > SIDE_DISTANCE)
-          {
-            speed_right = speed_right * SIDECONTROL_FACTOR;
-            if (ir_sensor_front < 90)
-              speed_right = 0;
-            //speed_right = diff16(speed_right, (ir_sensor_right - SIDE_DISTANCE)) * SIDECONTROL_FACTOR;
           }
         #elif STRATEGY == 2 // SIDECONTROL LEFT
           if(ir_sensor_left > SIDE_DISTANCE)
