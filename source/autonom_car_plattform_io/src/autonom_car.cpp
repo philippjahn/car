@@ -218,7 +218,7 @@ void loop()
           else if(ir_sensor_right < SIDE_DISTANCE)
           {
             speed_left = speed_left * SIDECONTROL_FACTOR;
-            if (ir_sensor_front < 90)
+            if (ir_sensor_front < 90 || ir_sensor_left >= 80)
               speed_left = 0;
             /*speed_left = diff16(speed_left, (SIDE_DISTANCE - ir_sensor_right)) * SIDECONTROL_FACTOR;
             speed_right = add16(speed_right, (SIDE_DISTANCE - ir_sensor_right)) * SIDECONTROL_FACTOR;*/
