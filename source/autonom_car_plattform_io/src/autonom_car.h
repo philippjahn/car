@@ -1,4 +1,12 @@
-// General definitions
+/**
+ * Autonom Driving Car - Crazy Car
+ * Algorithm to navigate through the race track as fast as possible
+ * (C) 2025 Philipp Jahn
+ *
+ *	file	autonom_car.h
+ */
+
+ // General definitions
 #define BAUD                      115200                    // define baud for serial communication
 
 #define FALSE                     0

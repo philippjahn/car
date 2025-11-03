@@ -68,11 +68,10 @@ void loop()
 
   static uint8_t speed_left = 0, speed_right = 0;
 
-  static unsigned long previous_millis_250ms;
+  static unsigned long previous_millis_100ms = 0;
 
-  static unsigned long previous_millis_20ms;
+  static unsigned long previous_millis_20ms = 0;
 
-  static uint8_t delay_once = 0;
   static uint8_t count_state_left = 0;
   static uint8_t count_state_right = 0;
 
@@ -91,10 +90,17 @@ void loop()
   battery_measurement = analogRead(A3);
   battery_voltage = (float) battery_measurement * 3.1364 * 0.004883 * 10; // Voltage divided by 690/220 and 1024 = 5V and times 10 to get one decimal digit
 
+  
+  //Enable for calibration measurement
+  /*ir_sensor_front = analogRead(A0);
+  ir_sensor_left = analogRead(A2);
+  ir_sensor_right = analogRead(A1);*/
+  
+
   // timeslices - to be done every 250ms
-  if (millis() - previous_millis_250ms >= 100)
+  if (millis() - previous_millis_100ms >= 200)
   {
-    previous_millis_250ms = millis();
+    previous_millis_100ms = millis();
 
     // Analog Signals -> Front A0, Right A1, Left A2, Batt A3
     // TODO change state to battery output
@@ -105,7 +111,7 @@ void loop()
     Serial.println(count_state_right);
 
     // TODO Funktion schreiben
-    //Serial.print("State: \t"); Serial.print(state); Serial.print("\tBatt: \t"); Serial.print(battery_voltage); Serial.print("\tFront: \t"); Serial.print(ir_sensor_front); Serial.print("\tRight: \t"); Serial.print(ir_sensor_right); Serial.print("\tLeft: \t"); Serial.print(ir_sensor_left); Serial.print("\tDiff: \t"); Serial.println(diff_left_right);
+    Serial.print("State: \t"); Serial.print(state); Serial.print("\tBatt: \t"); Serial.print(battery_voltage); Serial.print("\tFront: \t"); Serial.print(ir_sensor_front); Serial.print("\tRight: \t"); Serial.print(ir_sensor_right); Serial.print("\tLeft: \t"); Serial.print(ir_sensor_left); Serial.print("\tDiff: \t"); Serial.println(diff_left_right);
   }
 
   // timeslices - to be done every 20ms
@@ -204,40 +210,22 @@ void loop()
             speed_right = STOP_SPEED;
             state_new = DRIVE_BACKWARD;
           }
-          // TODO in case of error try fixed speed
-          /*speed_left = 210;
-          speed_right = 210;*/
         
           if(ir_sensor_right > SIDE_DISTANCE)
           {
             speed_right = speed_right * SIDECONTROL_FACTOR;
             if (ir_sensor_front < 90 || ir_sensor_right >= 80)
               speed_right = 0;
-            //speed_right = diff16(speed_right, (ir_sensor_right - SIDE_DISTANCE)) * SIDECONTROL_FACTOR;
           }
           else if(ir_sensor_right < SIDE_DISTANCE)
           {
             speed_left = speed_left * SIDECONTROL_FACTOR;
             if (ir_sensor_front < 90 || ir_sensor_left >= 80)
               speed_left = 0;
-            /*speed_left = diff16(speed_left, (SIDE_DISTANCE - ir_sensor_right)) * SIDECONTROL_FACTOR;
-            speed_right = add16(speed_right, (SIDE_DISTANCE - ir_sensor_right)) * SIDECONTROL_FACTOR;*/
           }
         #elif STRATEGY == 2 // SIDECONTROL LEFT
-          if(ir_sensor_left > SIDE_DISTANCE)
-            speed_left = diff16(speed_left, (ir_sensor_left - SIDE_DISTANCE)) * SIDECONTROL_FACTOR;
+
         #endif
-
-        // TODO calcualate before? 
-        /*if (ir_sensor_right_last >= SHARP_TURN_VALUE && ir_sensor_right > SHARP_TURN_VALUE)
-        {
-          state_new = SHARP_RIGHT;
-        }
-        else if (ir_sensor_left_last >= SHARP_TURN_VALUE && ir_sensor_left > SHARP_TURN_VALUE)
-        {
-          state_new = SHARP_LEFT;
-        }*/
-
         break;
 
       case DRIVE_BACKWARD:
@@ -247,7 +235,7 @@ void loop()
           digitalWrite(MOTOR_LEFT_FORWARD, LOW);  // stop moving forward
           analogWrite(MOTOR_RIGHT_SPEED, STOP_SPEED);
           analogWrite(MOTOR_LEFT_SPEED, STOP_SPEED);
-          delay(300);   // avoid to fast switching from forward to backward
+          delay(300);   // avoid fast switching from forward to backward
         }
 
         drive_left_backward = TRUE; // input for speed sensors
@@ -268,27 +256,19 @@ void loop()
 
         break;
 
-        case SHARP_LEFT:
+      case SHARP_LEFT:
         if (state_old != SHARP_LEFT)
           count_state_left++;
 
         speed_left = MIN_SPEED;
         speed_right = MAX_SPEED;
 
-        if(delay_once == 0)
-        {
-          //delay(200);
-          delay_once = 1;
-        }
-
         if (ir_sensor_front > 120)
         {
-          delay_once = 0;
           state_new = DRIVE_FORWARD;
         }
         else if (ir_sensor_front < BACKWARD_THRESHOLD)
         {
-          delay_once = 0;
           speed_left = STOP_SPEED;
           speed_right = STOP_SPEED;
           state_new = DRIVE_BACKWARD;
@@ -303,20 +283,12 @@ void loop()
         speed_left = MAX_SPEED;
         speed_right = MIN_SPEED;
 
-        if(delay_once == 0)
-        {
-          //delay(200);
-          delay_once = 1;
-        }
-
         if (ir_sensor_front > 120)
         {
-          delay_once = 0;
           state_new = DRIVE_FORWARD;
         }
         else if (ir_sensor_front < BACKWARD_THRESHOLD)
         {
-          delay_once = 0;
           speed_left = STOP_SPEED;
           speed_right = STOP_SPEED;
           state_new = DRIVE_BACKWARD;
@@ -356,29 +328,4 @@ void loop()
     analogWrite(MOTOR_LEFT_SPEED, speed_left);
   }
   return;
-}
-
-
-uint8_t add16(uint8_t summand1, int16_t summand2)
-{
-  int16_t sum = (int16_t) summand1 + summand2;
-
-  if (sum > 255)
-  {
-    sum = 255;
-  }
-
-  return (uint8_t) sum;
-}
-
-uint8_t diff16(uint8_t minuend, int16_t subtrahend)
-{
-  int16_t difference = (int16_t) minuend - subtrahend;
-
-  if (difference < 0)
-  {
-    difference = 0;
-  }
-  
-  return (uint8_t) difference;
 }

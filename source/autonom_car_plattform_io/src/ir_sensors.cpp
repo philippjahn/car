@@ -1,3 +1,11 @@
+/**
+ * Autonom Driving Car - Crazy Car
+ * Algorithm to navigate through the race track as fast as possible
+ * (C) 2025 Philipp Jahn
+ *
+ *	file	ir_sensors.cpp
+ */
+
 #include <Arduino.h>
 #include "autonom_car.h"
 #include "ir_sensors.h"
@@ -23,7 +31,7 @@ void measure_ir_distances()
 
   // read IR sensor data
   ir_sensor_front_raw = analogRead(IR_SENSOR_FRONT);
-	ir_sensor_front_new = (uint16_t) (16256.4 / (ir_sensor_front_raw + 22.8)) - 8;
+	ir_sensor_front_new = (uint16_t) (PARAM_M_FRONT / (ir_sensor_front_raw + PARAM_D_FRONT)) - PARAM_K_FRONT;
 
 	if(ir_sensor_front_new > 150)
     ir_sensor_front_new = 151;
@@ -32,7 +40,7 @@ void measure_ir_distances()
 
 
   ir_sensor_right_raw = analogRead(IR_SENSOR_RIGHT);
-	ir_sensor_right_new = (uint16_t) (5754.24 / (ir_sensor_right_raw + 11.44)) - 4;
+	ir_sensor_right_new = (uint16_t) (PARAM_M_RIGHT / (ir_sensor_right_raw + PARAM_K_RIGHT)) - PARAM_K_RIGHT;
 
 	if(ir_sensor_right_new > 80)
     ir_sensor_right_new = 81;
@@ -41,7 +49,7 @@ void measure_ir_distances()
 
 
   ir_sensor_left_raw = analogRead(IR_SENSOR_LEFT);
-	ir_sensor_left_new = (uint16_t) (5754.24 / (ir_sensor_left_raw + 11.44)) - 4;
+	ir_sensor_left_new = (uint16_t) (PARAM_M_LEFT / (ir_sensor_left_raw + PARAM_D_LEFT)) - PARAM_K_LEFT;
 
 	if(ir_sensor_left_new > 80)
     ir_sensor_left_new = 81;
@@ -65,16 +73,6 @@ void measure_ir_distances()
 
   // calculate difference of right and left
   diff_left_right = ir_sensor_left - ir_sensor_right;
-
-  // arithmetic mean to compensate wrong measurements and discard complete nonsense measurements - not required anymore was due to software error (integer overflows)
-  // (bigger jump than 80% or last three values are not all in a similar range and different from minimum value)
-  /*if ((ir_sensor_front_new > (ir_sensor_front * 0.8)) || (ir_sensor_front_new != 19 && (ir_sensor_front_last - ir_sensor_front_new < 15) && (ir_sensor_front_2nd_last - ir_sensor_front_new < 15)));// || (abs(ir_sensor_front_new - ir_sensor_front_last) < 0 && abs(ir_sensor_front_new - ir_sensor_front_2nd_last) < 0))
-    ir_sensor_front = (ir_sensor_front + ir_sensor_front_new) / 2;
-  if ((ir_sensor_left_new > (ir_sensor_left * 0.8)) || (ir_sensor_left_new != 9 && (ir_sensor_left_last - ir_sensor_left_new < 15) && (ir_sensor_left_2nd_last - ir_sensor_left_new < 15)));// || (abs(ir_sensor_left_new - ir_sensor_left_last) < 0 && abs(ir_sensor_left_new - ir_sensor_left_2nd_last) < 0))
-    ir_sensor_left = (ir_sensor_left + ir_sensor_left_new) / 2;
-  if ((ir_sensor_right_new > (ir_sensor_right * 0.8)) || (ir_sensor_right_new != 9 && (ir_sensor_right_last - ir_sensor_right_new < 15) && (ir_sensor_right_2nd_last - ir_sensor_right_new < 15)));// || (abs(ir_sensor_right_new - ir_sensor_right_last) < 0 && abs(ir_sensor_right_new - ir_sensor_right_2nd_last) < 0))
-    ir_sensor_right = (ir_sensor_right + ir_sensor_right_new) / 2;
-  */
 }
 
 
