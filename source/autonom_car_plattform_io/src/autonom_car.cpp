@@ -97,8 +97,8 @@ void loop()
   ir_sensor_right = analogRead(A1);*/
   
 
-  // timeslices - to be done every 250ms
-  if (millis() - previous_millis_100ms >= 200)
+  // timeslices - to be done every 100ms
+  if (millis() - previous_millis_100ms >= 100)
   {
     previous_millis_100ms = millis();
 
