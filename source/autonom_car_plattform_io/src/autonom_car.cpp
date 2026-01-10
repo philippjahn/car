@@ -128,14 +128,14 @@ void loop()
     {
       case EMERGENCY_STOP:
         speed_left = STOP_SPEED;
-        speed_right = STOP_SPEED;
+        speed_right = speed_left;
 
         // only way to start by pressing the start button
         break;
 
       case STOP:
         speed_left = STOP_SPEED;
-        speed_right = STOP_SPEED;
+        speed_right = speed_left;
 
         if (ir_sensor_front >= FORWARD_THRESHOLD)
         {
@@ -224,7 +224,28 @@ void loop()
               speed_left = 0;
           }
         #elif STRATEGY == 2 // SIDECONTROL LEFT
+          speed_left = ir_sensor_front * SPEED_CONTROL_K + SPEED_CONTROL_D;  // k, d taken from excel calculation y = k*x + d
+          speed_right = speed_left;
 
+          if(ir_sensor_left > SIDE_DISTANCE)
+          {
+            speed_left = speed_left * SIDECONTROL_FACTOR;
+            /*if (ir_sensor_front < 90 || ir_sensor_right >= 80)
+              speed_left = 0;*/
+          }
+          else if(ir_sensor_left < SIDE_DISTANCE)
+          {
+            speed_right = speed_right * SIDECONTROL_FACTOR;
+            /*if (ir_sensor_front < 90 || ir_sensor_left >= 80)
+              speed_right = 0;*/
+          }
+
+          if (ir_sensor_front < BACKWARD_THRESHOLD)
+          {
+            speed_left = STOP_SPEED;
+            speed_right = STOP_SPEED;
+            state_new = DRIVE_BACKWARD;
+          }        
         #endif
         break;
 
@@ -250,7 +271,7 @@ void loop()
         if (ir_sensor_front >= FORWARD_THRESHOLD)
         {
           speed_left = STOP_SPEED;
-          speed_right = STOP_SPEED;
+          speed_right = speed_left;
           state_new = DRIVE_FORWARD;
         }
 
