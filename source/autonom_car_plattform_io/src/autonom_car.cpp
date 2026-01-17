@@ -224,18 +224,18 @@ void loop()
               speed_left = 0;
           }
         #elif STRATEGY == 2 // SIDECONTROL LEFT
-          speed_left = ir_sensor_front * SPEED_CONTROL_K + SPEED_CONTROL_D;  // k, d taken from excel calculation y = k*x + d
+          speed_left = MAX_SPEED; // ir_sensor_front * SPEED_CONTROL_K + SPEED_CONTROL_D;  // k, d taken from excel calculation y = k*x + d
           speed_right = speed_left;
 
           if(ir_sensor_left > SIDE_DISTANCE)
           {
-            speed_left = speed_left * SIDECONTROL_FACTOR;
+            speed_left = speed_left * 0.5;
             /*if (ir_sensor_front < 90 || ir_sensor_right >= 80)
               speed_left = 0;*/
           }
           else if(ir_sensor_left < SIDE_DISTANCE)
           {
-            speed_right = speed_right * SIDECONTROL_FACTOR;
+            speed_right = speed_right * 0.5;
             /*if (ir_sensor_front < 90 || ir_sensor_left >= 80)
               speed_right = 0;*/
           }
