@@ -230,14 +230,14 @@ void loop()
           if(ir_sensor_left < SIDE_DISTANCE)
           {
             speed_right = speed_right * 0.5;
-            /*if (ir_sensor_front < 90 || ir_sensor_left >= 80)
-              speed_right = 0;*/
+            if (ir_sensor_front < 90 || ir_sensor_left >= 80)
+              speed_right = 0;
           }
           else if(ir_sensor_left > SIDE_DISTANCE)
           {
             speed_left = speed_left * 0.5;
-            /*if (ir_sensor_front < 90 || ir_sensor_right >= 80)
-              speed_left = 0;*/
+            if (ir_sensor_front < 90 || ir_sensor_right >= 80)
+              speed_left = 0;
           }
 
           if (ir_sensor_front < BACKWARD_THRESHOLD)
