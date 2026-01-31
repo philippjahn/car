@@ -50,7 +50,7 @@
 #define SPEED_CONTROL_D           MAX_SPEED - (SPEED_CONTROL_K * FORWARD_MAX_SPEED_THRESHOLD)
 
 
-#define STRATEGY                  2    // MIDDLECONTROL = 0; SIDECONTROL RIGHT = 1, SIDECONTROL LEFT = 2
+#define STRATEGY                  4    // MIDDLECONTROL = 0; SIDECONTROL RIGHT = 1, SIDECONTROL LEFT = 2
 #define MIDDLECONTROL_FACTOR      4    // correction factor for middlecontrol in steering calculation (4 smooth correction ... )
 #define SIDE_DISTANCE             30   // distance to the side where the car should drive
 #define SIDECONTROL_FACTOR        0.8  // correction factor for sidecontrol in steering calculation (percentage)

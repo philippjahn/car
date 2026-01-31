@@ -223,22 +223,74 @@ void loop()
             if (ir_sensor_front < 90 || ir_sensor_left >= 80)
               speed_left = 0;
           }
-        #elif STRATEGY == 2 // SIDECONTROL LEFT
-          speed_left = MAX_SPEED;
+        #elif STRATEGY == 2 // SIDECONTROL LEFT BASIC
+          speed_left = MID_SPEED;
           speed_right = speed_left;
 
-          if(ir_sensor_left < SIDE_DISTANCE)
+          if(ir_sensor_left < 40)
+          {
+            speed_right = speed_right * 0.3;
+          }
+          else if(ir_sensor_left > 40)
+          {
+            speed_left = speed_left * 0.3;
+          }
+
+          if (ir_sensor_front < BACKWARD_THRESHOLD)
+          {
+            speed_left = STOP_SPEED;
+            speed_right = STOP_SPEED;
+            state_new = DRIVE_BACKWARD;
+          }        
+        #elif STRATEGY == 3 // SIDECONTROL LEFT IMPROVED
+          speed_left = MAX_SPEED -30;
+          speed_right = speed_left;
+
+          if(ir_sensor_left < 40)
           {
             speed_right = speed_right * 0.5;
-            if (ir_sensor_front < 90 || ir_sensor_left >= 80)
-              speed_right = 0;
+            if (ir_sensor_front < 90 || ir_sensor_right >= 80)
+              speed_right = speed_right * 0.1;
           }
-          else if(ir_sensor_left > SIDE_DISTANCE)
+          else if(ir_sensor_left > 40)
           {
             speed_left = speed_left * 0.5;
-            if (ir_sensor_front < 90 || ir_sensor_right >= 80)
-              speed_left = 0;
+            if (ir_sensor_front < 90 || ir_sensor_left >= 80)
+              speed_left = speed_left * 0.1;
           }
+
+          if (ir_sensor_front < BACKWARD_THRESHOLD)
+          {
+            speed_left = STOP_SPEED;
+            speed_right = STOP_SPEED;
+            state_new = DRIVE_BACKWARD;
+          }        
+        #elif STRATEGY == 4 // SIDECONTROL LEFT PID Regler
+          speed_left = MAX_SPEED;
+          speed_right = speed_left;
+          
+          // PID controller for left sensor alignment
+          static int pid_output = 50;
+          static int pid_error = 10;
+          static int pid_error_prev = 3;
+          static int pid_error_prev2 = 1;
+          static int pid_integral = 0;
+          const float KP = 1, KI = 0, KD = 0;
+
+          pid_error_prev2 = pid_error_prev;
+          pid_error_prev = pid_error;
+          pid_error = ir_sensor_left - SIDE_DISTANCE;
+          pid_integral += pid_error;
+          pid_integral = constrain(pid_integral, -100, 100); // anti-windup
+          pid_output = (int) (KP * pid_error + KI * pid_integral + KD * (pid_error - pid_error_prev));
+          
+          //pid_output = (int) (pid_output + KP * (pid_error - pid_error_prev) + KI * (pid_error) + KD * (pid_error - 2 * pid_error_prev + pid_error_prev2));
+          //pid_output = constrain(pid_output, -150, 150);
+
+          speed_right = constrain(speed_right - pid_output, 0, MAX_SPEED);
+          speed_left = constrain(speed_left + pid_output, 0, MAX_SPEED);
+
+          Serial.println("PID Output: \t" + String(pid_output) + "\tError: \t" + String(pid_error));
 
           if (ir_sensor_front < BACKWARD_THRESHOLD)
           {
